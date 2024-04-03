@@ -3,32 +3,33 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
-using System.Runtime.InteropServices;
+using InventoryManagementSystem.Models;
 
-namespace InventoryManagementSystem
+namespace InventoryManagementSystem.Services
 {
-    public class User
+    public class AuthenticationService : IAuthService
     {
         private readonly string _connectionString;
-        public string _id { get; set; }
 
-        public User(string connectionString)
+        public AuthenticationService(string connectionString)
         {
             this._connectionString = connectionString;
         }
 
-        private (byte[], string) HashPasword(string password, [ Optional ] string currentSalt)
+        public (byte[], string) HashPasword(string password, [Optional] string currentSalt)
         {
             byte[] salt;
-            if (currentSalt==null) 
-            { 
+            if (currentSalt == null)
+            {
                 salt = new byte[16];
                 new RNGCryptoServiceProvider().GetBytes(salt);
             }
-            else {
+            else
+            {
                 salt = Convert.FromBase64String(currentSalt);
             }
             // Compute hash
@@ -43,7 +44,7 @@ namespace InventoryManagementSystem
             // Convert to base64
             return (salt, Convert.ToBase64String(hashBytes));
         }
-        
+
         public bool IsEmailExist(string email)
         {
             bool isExist = false;
@@ -63,41 +64,9 @@ namespace InventoryManagementSystem
             return isExist;
         }
 
-
-        public bool RegisterUser(string username, string email,
-                                string password, string address, string usertype = "user")
-        {
-            if (IsEmailExist(email)) return false;
-            (byte[] hashSalt, string hashedPassword) = HashPasword(password);
-            
-            using (var conn = new NpgsqlConnection(this._connectionString))
-            {
-                conn.Open();
-                using (var cmd = new NpgsqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = "INSERT INTO users (user_id, user_email, user_username, user_password, user_address, user_type, salt) " +
-                        "VALUES (@UserID, @UserEmail, @UserName, @Password, @UserAddress, @UserType, @Salt)" +
-                        "ON CONFLICT (user_email) DO NOTHING";
-                    cmd.Parameters.AddWithValue("UserID", Guid.NewGuid());
-                    cmd.Parameters.AddWithValue("UserEmail", email);
-                    cmd.Parameters.AddWithValue("UserName", username);
-                    cmd.Parameters.AddWithValue("Password", hashedPassword);
-                    cmd.Parameters.AddWithValue("UserAddress", address);
-                    cmd.Parameters.AddWithValue("UserType", usertype);
-                    cmd.Parameters.AddWithValue("Salt", Convert.ToBase64String(hashSalt));
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    Console.WriteLine("Succefully added {0}", email);
-                }
-                conn.Close();
-            }
-            return true;
-        }
-
-
         public bool Login(string email, string password, bool reset=false)
         {
-            if(!reset) if (IsEmailExist(email) == false) return false;
+            if (!reset) if (IsEmailExist(email) == false) return false;
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 conn.Open();
@@ -126,11 +95,42 @@ namespace InventoryManagementSystem
             return false;
         }
 
-        public bool resetPassword(string email, string newPassword)
+        public bool Register(string username, string email, string password, string address, UserType usertype = UserType.User)
         {
-            if (Login(email, newPassword, true)) return false;
+            if (IsEmailExist(email)) return false;
+            (byte[] hashSalt, string hashedPassword) = HashPasword(password);
+
+            using (var conn = new NpgsqlConnection(this._connectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = "INSERT INTO users (user_id, user_email, user_username, user_password, user_address, user_type, salt) " +
+                        "VALUES (@UserID, @UserEmail, @UserName, @Password, @UserAddress, @UserType, @Salt)" +
+                        "ON CONFLICT (user_email) DO NOTHING";
+                    cmd.Parameters.AddWithValue("UserID", Guid.NewGuid());
+                    cmd.Parameters.AddWithValue("UserEmail", email);
+                    cmd.Parameters.AddWithValue("UserName", username);
+                    cmd.Parameters.AddWithValue("Password", hashedPassword);
+                    cmd.Parameters.AddWithValue("UserAddress", address);
+                    cmd.Parameters.AddWithValue("UserType", usertype);
+                    cmd.Parameters.AddWithValue("Salt", Convert.ToBase64String(hashSalt));
+                    int rowsAffected = cmd.ExecuteNonQuery();
+                    Console.WriteLine("Succefully added {0}", email);
+                }
+                conn.Close();
+            }
+            return true;
+        }
+
+        public string resetPassword(User user, string newPassword)
+        {
+            if (Login(user.userEmail, newPassword, true)) return newPassword;
 
             (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword);
+            
+            string stringSalt = Convert.ToBase64String(hashSalt);
 
             using (var conn = new NpgsqlConnection(_connectionString))
             {
@@ -142,11 +142,17 @@ namespace InventoryManagementSystem
                         "SET user_password = @NewPassword, salt = @Salt " +
                         "WHERE user_email = @UserEmail";
                     cmd.Parameters.AddWithValue("NewPassword", hashedPassword);
-                    cmd.Parameters.AddWithValue("UserEmail", email);
-                    cmd.Parameters.AddWithValue("Salt", Convert.ToBase64String(hashSalt));
-                    return cmd.ExecuteNonQuery()!=-1;
+                    cmd.Parameters.AddWithValue("UserEmail", user.userEmail);
+                    cmd.Parameters.AddWithValue("Salt", stringSalt);
+                    if (cmd.ExecuteNonQuery() != -1)
+                    {
+                        user.userPassword = hashedPassword;
+                        user.userSalt = stringSalt;
+                        return "Success";
+                    }
                 }
             }
+            return "";
         }
     }
 }
