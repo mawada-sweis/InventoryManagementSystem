@@ -97,7 +97,6 @@ namespace InventoryManagementSystem.Services
 
         public bool Register(string username, string email, string password, string address, UserType usertype = UserType.User)
         {
-            if (IsEmailExist(email)) return false;
             (byte[] hashSalt, string hashedPassword) = HashPasword(password);
 
             using (var conn = new NpgsqlConnection(this._connectionString))
@@ -114,9 +113,9 @@ namespace InventoryManagementSystem.Services
                     cmd.Parameters.AddWithValue("UserName", username);
                     cmd.Parameters.AddWithValue("Password", hashedPassword);
                     cmd.Parameters.AddWithValue("UserAddress", address);
-                    cmd.Parameters.AddWithValue("UserType", usertype);
+                    cmd.Parameters.AddWithValue("UserType", usertype.ToString());
                     cmd.Parameters.AddWithValue("Salt", Convert.ToBase64String(hashSalt));
-                    int rowsAffected = cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                     Console.WriteLine("Succefully added {0}", email);
                 }
                 conn.Close();
@@ -124,9 +123,9 @@ namespace InventoryManagementSystem.Services
             return true;
         }
 
-        public string resetPassword(User user, string newPassword)
+        public string resetPassword(ref User user, string newPassword)
         {
-            if (Login(user.userEmail, newPassword, true)) return newPassword;
+            if (Login(user.userEmail, newPassword, true)) return "Same";
 
             (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword);
             
