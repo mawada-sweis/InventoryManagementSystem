@@ -9,48 +9,125 @@ using InventoryManagementSystem.Services;
 using InventoryManagementSystem.Commands;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem
 {
     internal class Program
     {
-        static string GetUserInput()
+        static string GetUserInput([Optional] string rout)
         {
-            Console.Write("Write a command: \\api\\");
-            return Console.ReadLine();
+            Console.Write("Write a command: \\api\\{0}", rout);
+            return Console.ReadLine().Trim();
         }
-        static void MainMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
+        static void AccountMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user, string rout, ref string userInput)
         {
-            string userInput = GetUserInput().Trim();
+            string userInputAccount = GetUserInput(rout);
             while (true)
             {
-                if (userInput == "logout") break;
-                else
+                switch (userInputAccount)
                 {
-                    switch (userInput)
-                    {
-                        case "reset-password":
-                            resetPassCommand.Execute(ref isAuthenticated, ref user);
-                            break;
-                    }
-                    userInput = GetUserInput().Trim();
+                    case "return-home":
+                        userInput = "home";
+                        return;
+
+                    case "logout":
+                        userInput = "logout";
+                        return;
+
+                    case "reset-password":
+                        resetPassCommand.Execute(ref isAuthenticated, ref user);
+                        break;
                 }
+                userInputAccount = GetUserInput(rout);
+            }
+        }
+        static void HomeUser(string rout, ref string userInput)
+        {
+            string userInputMenu = userInput;
+            while (true)
+            {
+                switch (userInputMenu)
+                {
+                    case "logout":
+                        userInput = "logout";
+                        return;
+
+                    case "menu":
+                        Console.WriteLine("======Menu======\n menu now empty!");
+                        break;
+                }
+                userInputMenu = GetUserInput(rout);
+            }
+        }
+        static void HomeAdmin(string rout, ref string userInput)
+        {
+            string userInputMenu = GetUserInput(rout);
+            while (true)
+            {
+                switch (userInputMenu)
+                {
+                    case "logout":
+                        userInput = "logout";
+                        return;
+
+                    case "menu":
+                        Console.WriteLine("======Menu======\n menu now empty!");
+                        break;
+                }
+                userInputMenu = GetUserInput(rout);
             }
         }
         static void UserMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
         {
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
-            MainMenu(resetPassCommand, isAuthenticated, ref user);
-            Console.WriteLine("Logout Successful");
 
+            string homeRout = $"{user.userName}\\home\\";
+            string userInput = GetUserInput(homeRout);
+            
+            while(true)
+            {
+                if (userInput == "account")
+                    AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
+                
+                if (userInput == "home" || userInput == "menu")
+                    HomeUser(homeRout, ref userInput);
+                
+                if (userInput == "logout")
+                {
+                    Console.WriteLine("Logout Successful");
+                    return;
+                }
+                
+                userInput = GetUserInput(homeRout);
+            }
         }
         static void AdminMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
         {
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
-            MainMenu(resetPassCommand, isAuthenticated, ref user);
-            Console.WriteLine("Logout Successful");
+
+            string homeRout = $"{user.userName}\\admin\\home\\";
+            string userInput = GetUserInput(homeRout);
+
+            while (true)
+            {
+                if (userInput == "account")
+                {
+                    AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
+                }
+                if (userInput == "home")
+                {
+                    HomeAdmin(homeRout + "\\menu\\", ref userInput);
+                }
+                if (userInput == "logout")
+                {
+                    Console.WriteLine("Logout Successful");
+                    return;
+                }
+                userInput = GetUserInput(homeRout);
+            }
         }
         static void Main(string[] args)
         {
