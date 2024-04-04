@@ -26,6 +26,7 @@ namespace InventoryManagementSystem.Commands
             {
                 Console.WriteLine("Login successful");
                 isAuthenticated = true;
+                GetUserInfo(ref user);
             }
             else 
             {
@@ -39,6 +40,11 @@ namespace InventoryManagementSystem.Commands
         {
             Console.Write(prompt);
             return Console.ReadLine();
+        }
+
+        private void GetUserInfo(ref User user)
+        {
+            _authService.GetUserInfo(ref user);
         }
 
     }
