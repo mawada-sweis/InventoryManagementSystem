@@ -9,7 +9,7 @@ namespace InventoryManagementSystem.Models
 {
     public class Item
     {
-        public int id { get; set; }
+        public Guid id { get; set; }
         public string name { get; set; }
         public string description { get; set; }
         public int price { get; set; }
@@ -23,7 +23,7 @@ namespace InventoryManagementSystem.Models
 
     public class User
     {
-        public int id { get; set; }
+        public Guid id { get; set; }
         public string userName { get; set; }
         public string userEmail { get; set; }
         public string userPassword { get; set; }

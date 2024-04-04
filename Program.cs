@@ -19,7 +19,39 @@ namespace InventoryManagementSystem
             Console.Write("Write a command: \\api\\");
             return Console.ReadLine();
         }
+        static void MainMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
+        {
+            string userInput = GetUserInput().Trim();
+            while (true)
+            {
+                if (userInput == "logout") break;
+                else
+                {
+                    switch (userInput)
+                    {
+                        case "reset-password":
+                            resetPassCommand.Execute(ref isAuthenticated, ref user);
+                            break;
+                    }
+                    userInput = GetUserInput().Trim();
+                }
+            }
+        }
+        static void UserMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
+        {
+            Console.Clear();
+            Console.WriteLine("Welcome, {0}", user.userName);
+            MainMenu(resetPassCommand, isAuthenticated, ref user);
+            Console.WriteLine("Logout Successful");
 
+        }
+        static void AdminMenu(ResetPassCommand resetPassCommand, bool isAuthenticated, ref User user)
+        {
+            Console.Clear();
+            Console.WriteLine("Welcome, {0}", user.userName);
+            MainMenu(resetPassCommand, isAuthenticated, ref user);
+            Console.WriteLine("Logout Successful");
+        }
         static void Main(string[] args)
         {
             bool isAuthenticated = false;
@@ -46,19 +78,16 @@ namespace InventoryManagementSystem
 
             if (isAuthenticated)
             {
-                string userInput = GetUserInput();
-                do
+                switch (user.userType)
                 {
-                    switch (userInput.Trim())
-                    {
-                        case "logout": break;
-                        case "reset-password":
-                            resetPassCommand.Execute(ref isAuthenticated, ref user);
-                            break;
-                    }
-                } while (GetUserInput().Trim() != "logout");
+                    case UserType.User:
+                        UserMenu(resetPassCommand, isAuthenticated, ref user);
+                        break;
+                    case UserType.Admin:
+                        AdminMenu(resetPassCommand, isAuthenticated, ref user);
+                        break;
+                }
             }
-
         }
     }
 }

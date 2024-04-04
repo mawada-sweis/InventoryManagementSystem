@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using InventoryManagementSystem.Models;
+using System.Text.RegularExpressions;
 
 namespace InventoryManagementSystem.Services
 {
@@ -152,6 +153,37 @@ namespace InventoryManagementSystem.Services
                 }
             }
             return "";
+        }
+    
+        public void GetUserInfo(ref User user)
+        {
+            if (IsEmailExist(user.userEmail) == false) return;
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = conn;
+
+                    cmd.CommandText = "SELECT * FROM users WHERE user_email = @UserEmail";
+                    cmd.Parameters.AddWithValue("UserEmail", user.userEmail);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            user.id = reader.GetGuid(0);
+                            user.userEmail = reader.GetString(1);
+                            user.userName = reader.GetString(2);
+                            user.userPassword = reader.GetString(3);
+                            user.userAddress = reader.GetString(4);
+                            user.userType = reader.GetString(5)=="user" ? UserType.User: UserType.Admin;
+                            user.userSalt = reader.GetString(6);
+                        }
+                    }
+                }
+            }
+            return;
         }
     }
 }

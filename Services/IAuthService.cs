@@ -15,5 +15,6 @@ namespace InventoryManagementSystem.Services
         bool IsEmailExist(string email);
         bool Login(string email, string password, bool reset = false);
         string resetPassword(ref User user, string newPassword);
+        void GetUserInfo(ref User user);
     }
 }
