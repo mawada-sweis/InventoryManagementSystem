@@ -39,7 +39,7 @@ namespace InventoryManagementSystem.Commands
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
-            return Console.ReadLine();
+            return Console.ReadLine().Trim();
         }
 
         private void GetUserInfo(ref User user)
@@ -90,7 +90,7 @@ namespace InventoryManagementSystem.Commands
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
-            return Console.ReadLine();
+            return Console.ReadLine().Trim();
         }
 
     }
@@ -126,7 +126,7 @@ namespace InventoryManagementSystem.Commands
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
-            return Console.ReadLine();
+            return Console.ReadLine().Trim();
         }
 
     }
