@@ -51,7 +51,9 @@ namespace InventoryManagementSystem.Models
 
     public enum ItemStatus
     {
-        foo
+        InStock,
+        OutOfStock,
+        LowStock
     }
 
     public enum Category

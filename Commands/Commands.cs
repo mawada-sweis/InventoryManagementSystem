@@ -2,9 +2,11 @@
 using InventoryManagementSystem.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -129,5 +131,42 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
 
+    }
+
+    public class AddItemCommand
+    {
+        private readonly IItemService _itemService;
+        public AddItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref Item item)
+        {
+            item.name = GetUserInput("Item name: ");
+            item.description = GetUserInput("description: ");
+            if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status)) 
+                item.status = status;
+            
+            else item.status = ItemStatus.InStock;
+            
+            item.price = int.Parse(GetUserInput("price: "));
+            item.quantity = int.Parse(GetUserInput("Quantity availible: "));
+            item.sold = int.Parse(GetUserInput("Number of sold item: "));
+            item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
+
+            _itemService.AddItem(
+                                item.name ,
+                                item.description,
+                                item.price,
+                                item.status,
+                                item.quantity,
+                                item.minQuantity,
+                                item.sold);
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
     }
 }

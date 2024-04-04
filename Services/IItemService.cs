@@ -14,7 +14,7 @@ namespace InventoryManagementSystem.Services
         void AddItem(string name,
             string description,
             int price,
-            string status,
+            ItemStatus status,
             int quantity,
             int minQuantity,
             int sold = 0

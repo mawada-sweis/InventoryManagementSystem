@@ -21,10 +21,10 @@ namespace InventoryManagementSystem.Services
             string name, 
             string description,
             int price,
-            string status,
+            ItemStatus status,
             int quantity,
             int minQuantity,
-            int sold = 0
+            int sold
             )
         {
             Guid id = Guid.NewGuid();
@@ -43,15 +43,13 @@ namespace InventoryManagementSystem.Services
                     command.Parameters.AddWithValue("@name", name);
                     command.Parameters.AddWithValue("@description", description);
                     command.Parameters.AddWithValue("@price", price);
-                    command.Parameters.AddWithValue("@status", status);
+                    command.Parameters.AddWithValue("@status", status.ToString());
                     command.Parameters.AddWithValue("@quantityAvailable", quantity);
+                    command.Parameters.AddWithValue("@sold", sold) ;
                     command.Parameters.AddWithValue("@minQuantity", minQuantity);
-                    command.Parameters.AddWithValue("@sold ", sold) ;
 
-                    // Execute the query
-                    int rowsAffected = command.ExecuteNonQuery();
-
-                    Console.WriteLine($"Rows affected: {rowsAffected}");
+                    if (command.ExecuteNonQuery() > 0) Console.WriteLine($"{name} addedd successfully");
+                    else Console.WriteLine($"{name} addedd faild");
                 }
             }
         }
