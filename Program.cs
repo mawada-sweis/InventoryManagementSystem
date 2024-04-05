@@ -2,6 +2,7 @@
 using InventoryManagementSystem.Models;
 using InventoryManagementSystem.Services;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 namespace InventoryManagementSystem
 {
@@ -60,7 +61,8 @@ namespace InventoryManagementSystem
         {
             IItemService itemService = new ItemService(Globals.ConnectionString);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
-            Item item = new Item();
+            Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
+            List<Item> items = new List<Item>();
             string userInputMenu = GetUserInput(rout);
             while (true)
             {
@@ -71,11 +73,17 @@ namespace InventoryManagementSystem
                         return;
 
                     case "menu":
-                        Console.WriteLine("======Menu======\n Add Item => AddItem");
+                        Console.WriteLine("======Menu======\n " +
+                            "Add Item => AddItem\n" +
+                            "Display All Items => DisplayItems");
                         break;
                     case "AddItem":
-                        addItemCommand.Execute(ref item);
+                        addItemCommand.Execute(ref items);
                         break;
+                    case "DisplayItems":
+                        getItemsCommand.Execute(ref items);
+                        break;
+
                 }
                 userInputMenu = GetUserInput(rout);
             }

@@ -10,8 +10,8 @@ namespace InventoryManagementSystem.Services
 {
     public interface IItemService
     {
-        Item GetItem();
-        void AddItem(string name,
+        List<Item> GetItems(ref List<Item> items);
+        bool AddItem(string name,
             string description,
             int price,
             ItemStatus status,

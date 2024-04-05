@@ -53,7 +53,8 @@ namespace InventoryManagementSystem.Models
     {
         InStock,
         OutOfStock,
-        LowStock
+        LowStock,
+        Unknown
     }
 
     public enum Category

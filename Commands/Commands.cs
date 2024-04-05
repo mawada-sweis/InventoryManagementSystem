@@ -140,8 +140,9 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        public void Execute(ref Item item)
+        public void Execute(ref List<Item> items)
         {
+            Item item = new Item();
             item.name = GetUserInput("Item name: ");
             item.description = GetUserInput("description: ");
             if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status)) 
@@ -154,14 +155,15 @@ namespace InventoryManagementSystem.Commands
             item.sold = int.Parse(GetUserInput("Number of sold item: "));
             item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
 
-            _itemService.AddItem(
+            if(_itemService.AddItem(
                                 item.name ,
                                 item.description,
                                 item.price,
                                 item.status,
                                 item.quantity,
                                 item.minQuantity,
-                                item.sold);
+                                item.sold)) items.Add(item);
+            
         }
         private string GetUserInput(string prompt)
         {
@@ -169,4 +171,37 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+
+    public class GetItemsCommand
+    {
+        private readonly IItemService _itemService;
+        public GetItemsCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> items)
+        {
+            items = _itemService.GetItems(ref items);
+            int count = 1;
+            foreach (Item item in items)
+            {
+                Console.WriteLine("Item {0}:", count);
+                Console.WriteLine("name: {0}", item.name);
+                Console.WriteLine("description: {0}", item.description);
+                Console.WriteLine("price: {0}", item.price);
+                Console.WriteLine("status: {0}", item.status);
+                Console.WriteLine("quantity: {0}", item.quantity);
+                Console.WriteLine("sold: {0}", item.sold);
+                Console.WriteLine("minQuantity: {0}", item.minQuantity);
+                Console.WriteLine("=================");
+                count++;
+            }
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
 }
