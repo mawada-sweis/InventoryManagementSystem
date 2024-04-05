@@ -64,9 +64,34 @@ namespace InventoryManagementSystem.Services
             }
         }
 
-        public bool DeleteItem(Guid id)
+        public void DeleteItem(ref List<Item> items, Guid guid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string query = "DELETE FROM items WHERE item_id = @ItemID";
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("ItemID", guid);
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            Console.WriteLine($"Deleted successfully");
+                            items.RemoveAll(item => item.id == guid);
+                        }
+                        else Console.WriteLine($"Failed to delete item");
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
         }
 
         public List<Item> GetItems(ref List<Item> items)

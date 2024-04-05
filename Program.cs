@@ -63,6 +63,7 @@ namespace InventoryManagementSystem
             Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
             Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
+            Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
             List<Item> items = new List<Item>();
             string userInputMenu = GetUserInput(rout);
             while (true)
@@ -76,7 +77,10 @@ namespace InventoryManagementSystem
                     case "menu":
                         Console.WriteLine("======Menu======\n " +
                             "Add Item => AddItem\n" +
-                            "Display All Items => DisplayItems");
+                            "Display All Items => DisplayItems\n" +
+                            "Update Item by Name => UpdateItem\n" +
+                            "Delete Item by Name => DeleteItem\n");
+                            
                         break;
                     case "AddItem":
                         addItemCommand.Execute(ref items);
@@ -88,6 +92,10 @@ namespace InventoryManagementSystem
                         getItemsCommand.Execute(ref items);
                         updateItemCommand.Execute(ref items);
                         break;
+                    case "DeleteItem":
+                        getItemsCommand.Execute(ref items);
+                        deleteItemCommand.Execute(ref items);
+                        break;
 
                 }
                 userInputMenu = GetUserInput(rout);
@@ -98,7 +106,7 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
 
-            string homeRout = $"{user.userName}\\home\\";
+            string homeRout = $"{user.userName}\\";
             string userInput = GetUserInput(homeRout);
 
             while (true)
@@ -107,7 +115,7 @@ namespace InventoryManagementSystem
                     AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
 
                 if (userInput == "home" || userInput == "menu")
-                    HomeUser(homeRout, ref userInput);
+                    HomeUser(homeRout+"home\\", ref userInput);
 
                 if (userInput == "logout")
                 {
@@ -123,7 +131,7 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
 
-            string homeRout = $"{user.userName}\\admin\\home\\";
+            string homeRout = $"{user.userName}\\admin\\";
             string userInput = GetUserInput(homeRout);
 
             while (true)
@@ -134,7 +142,7 @@ namespace InventoryManagementSystem
                 }
                 if (userInput == "home" || userInput == "menu")
                 {
-                    HomeAdmin(homeRout, ref userInput);
+                    HomeAdmin(homeRout+"home\\", ref userInput);
                 }
                 if (userInput == "logout")
                 {

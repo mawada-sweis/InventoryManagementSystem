@@ -312,4 +312,34 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    public class DeleteItemCommand
+    {
+        private readonly IItemService _itemService;
+        public DeleteItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        
+        public void Execute(ref List<Item> items)
+        {
+            string userInput = GetUserInput("What is name of item to delete? ");
+            if (userInput != null)
+            {
+                Guid? itemID = items.Find(item => item.name == userInput)?.id;
+
+                if (itemID == null)
+                {
+                    Console.WriteLine("Item not found in the list.");
+                    return;
+                }
+
+                else _itemService.DeleteItem(ref items, itemID.Value);
+            }
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
 }
