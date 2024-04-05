@@ -119,9 +119,55 @@ namespace InventoryManagementSystem.Services
             }
         }
 
-        public bool UpdateMessage()
+        public bool UpdateItem(ref Item item, Item newItem)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string query = "UPDATE items SET " +
+                                   "item_name = @Name, " +
+                                   "item_description = @Description, " +
+                                   "item_price = @Price, " +
+                                   "item_status = @Status, " +
+                                   "item_quantity_available = @QuantityAvailable, " +
+                                   "item_sold = @Sold, " +
+                                   "item_min_quantity = @MinQuantity " +
+                                   "WHERE item_id = @ID";
+
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", newItem.name);
+                        command.Parameters.AddWithValue("@Description", newItem.description);
+                        command.Parameters.AddWithValue("@Price", newItem.price);
+                        command.Parameters.AddWithValue("@Status", newItem.status.ToString());
+                        command.Parameters.AddWithValue("@QuantityAvailable", newItem.quantity);
+                        command.Parameters.AddWithValue("@Sold", newItem.sold);
+                        command.Parameters.AddWithValue("@MinQuantity", newItem.minQuantity);
+                        command.Parameters.AddWithValue("@ID", item.id);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            item = newItem;
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred while updating the item: " + ex.Message);
+                return false;
+            }
         }
+
     }
 }

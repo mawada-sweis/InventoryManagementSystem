@@ -62,6 +62,7 @@ namespace InventoryManagementSystem
             IItemService itemService = new ItemService(Globals.ConnectionString);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
             Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
+            Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             List<Item> items = new List<Item>();
             string userInputMenu = GetUserInput(rout);
             while (true)
@@ -82,6 +83,10 @@ namespace InventoryManagementSystem
                         break;
                     case "DisplayItems":
                         getItemsCommand.Execute(ref items);
+                        break;
+                    case "UpdateItem":
+                        getItemsCommand.Execute(ref items);
+                        updateItemCommand.Execute(ref items);
                         break;
 
                 }

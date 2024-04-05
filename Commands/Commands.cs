@@ -197,6 +197,114 @@ namespace InventoryManagementSystem.Commands
                 count++;
             }
         }
+    }
+
+    public class UpdateItemCommand
+    {
+        private readonly IItemService _itemService;
+        public UpdateItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> items)
+        {
+            try
+            {
+                string itemName = GetUserInput("Enter the name of the item you want to update:");
+
+                Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
+                if (itemToUpdate != null) ExecuteItemUpdate(ref itemToUpdate);
+                else Console.WriteLine($"Item with name '{itemName}' not found.");
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+
+        private void ExecuteItemUpdate(ref Item itemToUpdate)
+        {
+            try
+            {
+                Item updatedItem = new Item();
+
+                string userInput =
+                    GetUserInput("Do you want to update the name of the item? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.name = GetUserInput("Enter the new name:");
+                else updatedItem.name = itemToUpdate.name;
+
+                userInput =
+                    GetUserInput("Do you want to update the description of the item? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.description = GetUserInput("Enter the new description:");
+                else updatedItem.description = itemToUpdate.description;
+
+                userInput =
+                    GetUserInput("Do you want to update the price of the item? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.price = int.Parse(GetUserInput("Enter the new price:"));
+                else updatedItem.price = itemToUpdate.price;
+
+                userInput =
+                    GetUserInput("Do you want to update the status of the item? (Y/N)").ToUpper();
+                if (userInput == "Y")
+                {
+                    userInput = GetUserInput("Enter the new status:");
+                    switch (userInput)
+                    {
+                        case "InStock":
+                            updatedItem.status = ItemStatus.InStock;
+                            break;
+                        case "LowStock":
+                            updatedItem.status = ItemStatus.LowStock;
+                            break;
+                        case "OutOfStock":
+                            updatedItem.status = ItemStatus.OutOfStock;
+                            break;
+                        case "Unknown":
+                            updatedItem.status = ItemStatus.Unknown;
+                            break;
+                    }
+                }
+                else updatedItem.status = itemToUpdate.status;
+
+                userInput =
+                    GetUserInput("Do you want to update the quantity of the item? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.quantity = int.Parse(GetUserInput("Enter the new quantity:"));
+                else updatedItem.quantity = itemToUpdate.quantity;
+
+                userInput =
+                    GetUserInput("Do you want to update the number of sold items? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.sold = int.Parse(GetUserInput("Enter the new number:"));
+                else updatedItem.sold = itemToUpdate.sold;
+
+                userInput =
+                    GetUserInput("Do you want to update the minimum quantity of the item? (Y/N)").ToUpper();
+                if (userInput == "Y") updatedItem.minQuantity = int.Parse(GetUserInput("Enter the new value:"));
+                else updatedItem.minQuantity = itemToUpdate.minQuantity;
+
+
+                if (itemToUpdate.name != updatedItem.name ||
+                itemToUpdate.description != updatedItem.description ||
+                itemToUpdate.price != updatedItem.price ||
+                itemToUpdate.status != updatedItem.status ||
+                itemToUpdate.quantity != updatedItem.quantity ||
+                itemToUpdate.sold != updatedItem.sold ||
+                itemToUpdate.minQuantity != updatedItem.minQuantity)
+                {
+                    if (_itemService.UpdateItem(ref itemToUpdate, updatedItem))
+                        Console.WriteLine("Item updated successfully!");
+
+                    else Console.WriteLine("Failed to update the item.");
+                }
+                else Console.WriteLine("No changes were made to the item.");
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+       
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);

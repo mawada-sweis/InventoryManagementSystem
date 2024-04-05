@@ -19,7 +19,7 @@ namespace InventoryManagementSystem.Services
             int minQuantity,
             int sold = 0
             );
-        bool UpdateMessage();
+        bool UpdateItem(ref Item item, Item newItem);
         bool DeleteItem(Guid id);
     }
 }
