@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace InventoryManagementSystem.Models
 {
+    public class ItemCategory
+    {
+        public Guid id { get; set; }
+        public string name { get; set; }
+    }
     public class Item
     {
         public Guid id { get; set; }
@@ -13,7 +18,7 @@ namespace InventoryManagementSystem.Models
         public int sold { get; set; }
         public int minQuantity { get; set; }
         public int quantity { get; set; }
-        public Category category { get; set; }
+        public ItemCategory category { get; set; }
 
     }
 
@@ -52,8 +57,6 @@ namespace InventoryManagementSystem.Models
         LowStock,
         Unknown
     }
-
-    public enum Category{}
 
     public enum OrderStatus
     {

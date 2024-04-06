@@ -2,24 +2,34 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace InventoryManagementSystem.Services.Categories
 {
-    internal class CategoriesService : ICategoriesService
+    public class CategoriesService : ICategoriesService
     {
-        void ICategoriesService.AddCategory(string category)
+        private readonly string _connectionsString;
+        
+        public CategoriesService(string connectionsString)
+        {
+            this._connectionsString = connectionsString;
+        }
+
+        void ICategoriesService.AddCategory(string categoryName)
         {
             throw new NotImplementedException();
         }
-
+        
         void ICategoriesService.DeleteCategory(string categoryName)
         {
             throw new NotImplementedException();
         }
 
-        List<Category> ICategoriesService.GetCategories()
+        ItemCategory ICategoriesService.GetCategories()
         {
             throw new NotImplementedException();
         }
