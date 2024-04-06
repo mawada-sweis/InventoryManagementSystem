@@ -2,25 +2,19 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace InventoryManagementSystem.Services
 {
     internal class ItemService : IItemService
     {
         private readonly string _connectionString;
-        public ItemService(string connectionString) 
+        public ItemService(string connectionString)
         {
             this._connectionString = connectionString;
         }
 
         public bool AddItem(
-            string name, 
+            string name,
             string description,
             int price,
             ItemStatus status,
@@ -30,7 +24,7 @@ namespace InventoryManagementSystem.Services
             )
         {
             Guid id = Guid.NewGuid();
-            
+
             string query = "INSERT INTO items (item_id, item_name, item_description, item_price, item_status, " +
                 "item_quantity_available, item_sold, item_min_quantity) " +
                 "VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity)";
@@ -47,7 +41,7 @@ namespace InventoryManagementSystem.Services
                     command.Parameters.AddWithValue("@price", price);
                     command.Parameters.AddWithValue("@status", status.ToString());
                     command.Parameters.AddWithValue("@quantityAvailable", quantity);
-                    command.Parameters.AddWithValue("@sold", sold) ;
+                    command.Parameters.AddWithValue("@sold", sold);
                     command.Parameters.AddWithValue("@minQuantity", minQuantity);
 
                     if (command.ExecuteNonQuery() > 0)
@@ -137,7 +131,7 @@ namespace InventoryManagementSystem.Services
                 }
                 return items;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
                 return items;

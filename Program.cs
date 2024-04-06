@@ -80,7 +80,7 @@ namespace InventoryManagementSystem
                             "Display All Items => DisplayItems\n" +
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n");
-                            
+
                         break;
                     case "AddItem":
                         addItemCommand.Execute(ref items);
@@ -115,7 +115,7 @@ namespace InventoryManagementSystem
                     AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
 
                 if (userInput == "home" || userInput == "menu")
-                    HomeUser(homeRout+"home\\", ref userInput);
+                    HomeUser(homeRout + "home\\", ref userInput);
 
                 if (userInput == "logout")
                 {
@@ -142,7 +142,7 @@ namespace InventoryManagementSystem
                 }
                 if (userInput == "home" || userInput == "menu")
                 {
-                    HomeAdmin(homeRout+"home\\", ref userInput);
+                    HomeAdmin(homeRout + "home\\", ref userInput);
                 }
                 if (userInput == "logout")
                 {

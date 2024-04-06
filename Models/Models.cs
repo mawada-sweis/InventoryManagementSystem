@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InventoryManagementSystem.Models
 {
@@ -29,7 +25,7 @@ namespace InventoryManagementSystem.Models
         public string userPassword { get; set; }
         public string userAddress { get; set; }
         public string userSalt { get; set; }
-        public UserType userType{ get; set; }
+        public UserType userType { get; set; }
         public List<Order> orders { get; set; }
     }
 

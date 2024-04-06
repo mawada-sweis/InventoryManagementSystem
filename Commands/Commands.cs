@@ -2,11 +2,7 @@
 using InventoryManagementSystem.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -30,7 +26,7 @@ namespace InventoryManagementSystem.Commands
                 isAuthenticated = true;
                 GetUserInfo(ref user);
             }
-            else 
+            else
             {
                 user.userEmail = String.Empty;
                 user.userPassword = String.Empty;
@@ -83,7 +79,7 @@ namespace InventoryManagementSystem.Commands
             {
                 user.userEmail = String.Empty;
                 user.userPassword = String.Empty;
-                user.userName = String.Empty; 
+                user.userName = String.Empty;
                 user.userAddress = String.Empty;
                 Console.WriteLine("Email is already exist!");
             }
@@ -145,25 +141,25 @@ namespace InventoryManagementSystem.Commands
             Item item = new Item();
             item.name = GetUserInput("Item name: ");
             item.description = GetUserInput("description: ");
-            if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status)) 
+            if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status))
                 item.status = status;
-            
+
             else item.status = ItemStatus.InStock;
-            
+
             item.price = int.Parse(GetUserInput("price: "));
             item.quantity = int.Parse(GetUserInput("Quantity availible: "));
             item.sold = int.Parse(GetUserInput("Number of sold item: "));
             item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
 
-            if(_itemService.AddItem(
-                                item.name ,
+            if (_itemService.AddItem(
+                                item.name,
                                 item.description,
                                 item.price,
                                 item.status,
                                 item.quantity,
                                 item.minQuantity,
                                 item.sold)) items.Add(item);
-            
+
         }
         private string GetUserInput(string prompt)
         {
@@ -215,7 +211,7 @@ namespace InventoryManagementSystem.Commands
                 Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
                 if (itemToUpdate != null) ExecuteItemUpdate(ref itemToUpdate);
                 else Console.WriteLine($"Item with name '{itemName}' not found.");
-                
+
             }
             catch (Exception ex)
             {
@@ -297,14 +293,14 @@ namespace InventoryManagementSystem.Commands
                     else Console.WriteLine("Failed to update the item.");
                 }
                 else Console.WriteLine("No changes were made to the item.");
-                
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
             }
         }
-       
+
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
@@ -319,7 +315,7 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        
+
         public void Execute(ref List<Item> items)
         {
             string userInput = GetUserInput("What is name of item to delete? ");
