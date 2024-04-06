@@ -53,10 +53,7 @@ namespace InventoryManagementSystem.Models
         Unknown
     }
 
-    public enum Category
-    {
-        foo
-    }
+    public enum Category{}
 
     public enum OrderStatus
     {
