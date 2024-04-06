@@ -1,20 +1,18 @@
-﻿using Npgsql;
+﻿using InventoryManagementSystem.Commands;
+using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Services.Items;
+using InventoryManagementSystem.Services.Authentication;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services;
-using InventoryManagementSystem.Commands;
-using System.Windows.Input;
-using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
-
 namespace InventoryManagementSystem
 {
     internal class Program
     {
+        public static class Globals
+        {
+            public static string ConnectionString { get; } = $"Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password={Environment.GetEnvironmentVariable("PG_PASSWORD")}";
+        }
         static string GetUserInput([Optional] string rout)
         {
             Console.Write("Write a command: \\api\\{0}", rout);
@@ -62,6 +60,12 @@ namespace InventoryManagementSystem
         }
         static void HomeAdmin(string rout, ref string userInput)
         {
+            IItemService itemService = new ItemService(Globals.ConnectionString);
+            Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
+            Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
+            Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
+            Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
+            List<Item> items = new List<Item>();
             string userInputMenu = GetUserInput(rout);
             while (true)
             {
@@ -72,8 +76,28 @@ namespace InventoryManagementSystem
                         return;
 
                     case "menu":
-                        Console.WriteLine("======Menu======\n menu now empty!");
+                        Console.WriteLine("======Menu======\n " +
+                            "Add Item => AddItem\n" +
+                            "Display All Items => DisplayItems\n" +
+                            "Update Item by Name => UpdateItem\n" +
+                            "Delete Item by Name => DeleteItem\n");
+
                         break;
+                    case "AddItem":
+                        addItemCommand.Execute(ref items);
+                        break;
+                    case "DisplayItems":
+                        getItemsCommand.Execute(ref items);
+                        break;
+                    case "UpdateItem":
+                        getItemsCommand.Execute(ref items, false);
+                        updateItemCommand.Execute(ref items);
+                        break;
+                    case "DeleteItem":
+                        getItemsCommand.Execute(ref items, false);
+                        deleteItemCommand.Execute(ref items);
+                        break;
+
                 }
                 userInputMenu = GetUserInput(rout);
             }
@@ -83,23 +107,23 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
 
-            string homeRout = $"{user.userName}\\home\\";
+            string homeRout = $"{user.userName}\\";
             string userInput = GetUserInput(homeRout);
-            
-            while(true)
+
+            while (true)
             {
                 if (userInput == "account")
                     AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
-                
+
                 if (userInput == "home" || userInput == "menu")
-                    HomeUser(homeRout, ref userInput);
-                
+                    HomeUser(homeRout + "home\\", ref userInput);
+
                 if (userInput == "logout")
                 {
                     Console.WriteLine("Logout Successful");
                     return;
                 }
-                
+
                 userInput = GetUserInput(homeRout);
             }
         }
@@ -108,7 +132,7 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
 
-            string homeRout = $"{user.userName}\\admin\\home\\";
+            string homeRout = $"{user.userName}\\admin\\";
             string userInput = GetUserInput(homeRout);
 
             while (true)
@@ -117,9 +141,9 @@ namespace InventoryManagementSystem
                 {
                     AccountMenu(resetPassCommand, isAuthenticated, ref user, $"{user.userName}\\account\\", ref userInput);
                 }
-                if (userInput == "home")
+                if (userInput == "home" || userInput == "menu")
                 {
-                    HomeAdmin(homeRout + "\\menu\\", ref userInput);
+                    HomeAdmin(homeRout + "home\\", ref userInput);
                 }
                 if (userInput == "logout")
                 {
@@ -132,23 +156,22 @@ namespace InventoryManagementSystem
         static void Main(string[] args)
         {
             bool isAuthenticated = false;
-            
-            string dbPassword = Environment.GetEnvironmentVariable("PG_PASSWORD");
-            string connectionString = $"Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password={dbPassword}";
 
             User user = new User();
-            IAuthService authentication = new AuthenticationService(connectionString);
+            IAuthService authentication = new AuthenticationService(Globals.ConnectionString);
 
             Commands.LoginCommand loginCommand = new LoginCommand(authentication);
             Commands.SignupCommand signupCommand = new SignupCommand(authentication);
             Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             switch (GetUserInput())
             {
-                case "Login": case "login":
+                case "Login":
+                case "login":
                     loginCommand.Execute(ref isAuthenticated, ref user);
                     break;
-                
-                case "Signup": case "signup":
+
+                case "Signup":
+                case "signup":
                     signupCommand.Execute(ref isAuthenticated, ref user);
                     break;
             }

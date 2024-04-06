@@ -1,16 +1,10 @@
-﻿using Npgsql;
+﻿using InventoryManagementSystem.Models;
+using Npgsql;
 using System;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using InventoryManagementSystem.Models;
-using System.Text.RegularExpressions;
 
-namespace InventoryManagementSystem.Services
+namespace InventoryManagementSystem.Services.Authentication
 {
     public class AuthenticationService : IAuthService
     {
@@ -65,7 +59,7 @@ namespace InventoryManagementSystem.Services
             return isExist;
         }
 
-        public bool Login(string email, string password, bool reset=false)
+        public bool Login(string email, string password, bool reset = false)
         {
             if (!reset) if (IsEmailExist(email) == false) return false;
             using (var conn = new NpgsqlConnection(_connectionString))
@@ -129,7 +123,7 @@ namespace InventoryManagementSystem.Services
             if (Login(user.userEmail, newPassword, true)) return "Same";
 
             (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword);
-            
+
             string stringSalt = Convert.ToBase64String(hashSalt);
 
             using (var conn = new NpgsqlConnection(_connectionString))
@@ -154,7 +148,7 @@ namespace InventoryManagementSystem.Services
             }
             return "";
         }
-    
+
         public void GetUserInfo(ref User user)
         {
             if (IsEmailExist(user.userEmail) == false) return;
@@ -177,7 +171,7 @@ namespace InventoryManagementSystem.Services
                             user.userName = reader.GetString(2);
                             user.userPassword = reader.GetString(3);
                             user.userAddress = reader.GetString(4);
-                            user.userType = reader.GetString(5)=="user" ? UserType.User: UserType.Admin;
+                            user.userType = reader.GetString(5) == "user" ? UserType.User : UserType.Admin;
                             user.userSalt = reader.GetString(6);
                         }
                     }
