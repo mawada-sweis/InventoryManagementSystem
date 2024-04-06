@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace InventoryManagementSystem.Services
+namespace InventoryManagementSystem.Services.Authentication
 {
     public class AuthenticationService : IAuthService
     {

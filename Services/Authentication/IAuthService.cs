@@ -1,7 +1,7 @@
 ﻿using InventoryManagementSystem.Models;
 using System.Runtime.InteropServices;
 
-namespace InventoryManagementSystem.Services
+namespace InventoryManagementSystem.Services.Authentication
 {
     public interface IAuthService
     {

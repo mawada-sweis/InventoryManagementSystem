@@ -3,7 +3,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 
-namespace InventoryManagementSystem.Services
+namespace InventoryManagementSystem.Services.Items
 {
     internal class ItemService : IItemService
     {

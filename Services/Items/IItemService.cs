@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace InventoryManagementSystem.Services
+namespace InventoryManagementSystem.Services.Items
 {
     public interface IItemService
     {

@@ -1,5 +1,6 @@
 ﻿using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services;
+using InventoryManagementSystem.Services.Items;
+using InventoryManagementSystem.Services.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
