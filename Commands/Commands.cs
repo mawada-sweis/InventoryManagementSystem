@@ -1,6 +1,7 @@
 ﻿using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services.Items;
 using InventoryManagementSystem.Services.Authentication;
+using InventoryManagementSystem.Services.Categories;
+using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -335,6 +336,24 @@ namespace InventoryManagementSystem.Commands
 
                 else _itemService.DeleteItem(ref items, itemID.Value);
             }
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
+    public class GetCategoriesCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public GetCategoriesCommand(ICategoriesService categoriesService)
+        {
+            this._categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            _categoriesServic.GetCategories(ref categories);
         }
         private string GetUserInput(string prompt)
         {

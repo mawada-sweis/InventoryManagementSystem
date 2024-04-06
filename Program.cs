@@ -1,10 +1,12 @@
 ﻿using InventoryManagementSystem.Commands;
 using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services.Items;
 using InventoryManagementSystem.Services.Authentication;
+using InventoryManagementSystem.Services.Categories;
+using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+
 namespace InventoryManagementSystem
 {
     internal class Program
@@ -61,11 +63,14 @@ namespace InventoryManagementSystem
         static void HomeAdmin(string rout, ref string userInput)
         {
             IItemService itemService = new ItemService(Globals.ConnectionString);
+            ICategoriesService categoriesService = new CategoriesService(Globals.ConnectionString);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
             Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
+            Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(categoriesService);
             List<Item> items = new List<Item>();
+            List<ItemCategory> categories = new List<ItemCategory>();
             string userInputMenu = GetUserInput(rout);
             while (true)
             {
@@ -80,7 +85,8 @@ namespace InventoryManagementSystem
                             "Add Item => AddItem\n" +
                             "Display All Items => DisplayItems\n" +
                             "Update Item by Name => UpdateItem\n" +
-                            "Delete Item by Name => DeleteItem\n");
+                            "Delete Item by Name => DeleteItem\n" +
+                            "Display All Categories => DisplayCategories");
 
                         break;
                     case "AddItem":
@@ -97,7 +103,9 @@ namespace InventoryManagementSystem
                         getItemsCommand.Execute(ref items, false);
                         deleteItemCommand.Execute(ref items);
                         break;
-
+                    case "DisplayCategories":
+                        getCategoriesCommand.Execute(ref categories);
+                        break;
                 }
                 userInputMenu = GetUserInput(rout);
             }
