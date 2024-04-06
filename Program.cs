@@ -89,11 +89,11 @@ namespace InventoryManagementSystem
                         getItemsCommand.Execute(ref items);
                         break;
                     case "UpdateItem":
-                        getItemsCommand.Execute(ref items);
+                        getItemsCommand.Execute(ref items, false);
                         updateItemCommand.Execute(ref items);
                         break;
                     case "DeleteItem":
-                        getItemsCommand.Execute(ref items);
+                        getItemsCommand.Execute(ref items, false);
                         deleteItemCommand.Execute(ref items);
                         break;
 

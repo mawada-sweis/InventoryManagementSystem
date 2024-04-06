@@ -175,22 +175,25 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        public void Execute(ref List<Item> items)
+        public void Execute(ref List<Item> items, bool isDisplay = true)
         {
             items = _itemService.GetItems(ref items);
-            int count = 1;
-            foreach (Item item in items)
+            if (isDisplay)
             {
-                Console.WriteLine("Item {0}:", count);
-                Console.WriteLine("name: {0}", item.name);
-                Console.WriteLine("description: {0}", item.description);
-                Console.WriteLine("price: {0}", item.price);
-                Console.WriteLine("status: {0}", item.status);
-                Console.WriteLine("quantity: {0}", item.quantity);
-                Console.WriteLine("sold: {0}", item.sold);
-                Console.WriteLine("minQuantity: {0}", item.minQuantity);
-                Console.WriteLine("=================");
-                count++;
+                int count = 1;
+                foreach (Item item in items)
+                {
+                    Console.WriteLine("Item {0}:", count);
+                    Console.WriteLine("name: {0}", item.name);
+                    Console.WriteLine("description: {0}", item.description);
+                    Console.WriteLine("price: {0}", item.price);
+                    Console.WriteLine("status: {0}", item.status);
+                    Console.WriteLine("quantity: {0}", item.quantity);
+                    Console.WriteLine("sold: {0}", item.sold);
+                    Console.WriteLine("minQuantity: {0}", item.minQuantity);
+                    Console.WriteLine("=================");
+                    count++;
+                }
             }
         }
     }
