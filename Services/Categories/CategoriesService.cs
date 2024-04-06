@@ -19,22 +19,22 @@ namespace InventoryManagementSystem.Services.Categories
             this._connectionsString = connectionsString;
         }
 
-        void ICategoriesService.AddCategory(string categoryName)
+        void ICategoriesService.AddCategory(string categoryName, List<ItemCategory> categories)
         {
             throw new NotImplementedException();
         }
         
-        void ICategoriesService.DeleteCategory(string categoryName)
+        void ICategoriesService.DeleteCategory(string categoryName, List<ItemCategory> categories)
         {
             throw new NotImplementedException();
         }
 
-        ItemCategory ICategoriesService.GetCategories()
+        ItemCategory ICategoriesService.GetCategories(List<ItemCategory> categories)
         {
             throw new NotImplementedException();
         }
 
-        void ICategoriesService.UpdateCategory(string categoryName)
+        void ICategoriesService.UpdateCategory(string categoryName, List<ItemCategory> categories)
         {
             throw new NotImplementedException();
         }
