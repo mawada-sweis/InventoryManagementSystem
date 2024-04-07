@@ -1,10 +1,12 @@
 ﻿using InventoryManagementSystem.Commands;
 using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services.Items;
 using InventoryManagementSystem.Services.Authentication;
+using InventoryManagementSystem.Services.Categories;
+using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+
 namespace InventoryManagementSystem
 {
     internal class Program
@@ -61,11 +63,17 @@ namespace InventoryManagementSystem
         static void HomeAdmin(string rout, ref string userInput)
         {
             IItemService itemService = new ItemService(Globals.ConnectionString);
+            ICategoriesService categoriesService = new CategoriesService(Globals.ConnectionString);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(itemService);
             Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
+            Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(categoriesService);
+            Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(categoriesService);
+            Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(categoriesService);
+            Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(categoriesService);
             List<Item> items = new List<Item>();
+            List<ItemCategory> categories = new List<ItemCategory>();
             string userInputMenu = GetUserInput(rout);
             while (true)
             {
@@ -80,24 +88,43 @@ namespace InventoryManagementSystem
                             "Add Item => AddItem\n" +
                             "Display All Items => DisplayItems\n" +
                             "Update Item by Name => UpdateItem\n" +
-                            "Delete Item by Name => DeleteItem\n");
+                            "Delete Item by Name => DeleteItem\n" +
+                            "Display All Categories => DisplayCategories\n" +
+                            "Add New Item Category => AddCategory\n" +
+                            "Update Category by Name => UpdateCategory\n"+
+                            "Delete Category by Name => DeleteCategory");
 
                         break;
                     case "AddItem":
                         addItemCommand.Execute(ref items);
                         break;
                     case "DisplayItems":
+                        getCategoriesCommand.Execute(ref categories);
                         getItemsCommand.Execute(ref items);
                         break;
                     case "UpdateItem":
                         getItemsCommand.Execute(ref items, false);
-                        updateItemCommand.Execute(ref items);
+                        updateItemCommand.Execute(ref items, ref categories);
                         break;
                     case "DeleteItem":
                         getItemsCommand.Execute(ref items, false);
                         deleteItemCommand.Execute(ref items);
                         break;
-
+                    case "DisplayCategories":
+                        getCategoriesCommand.Execute(ref categories);
+                        break;
+                    case "AddCategory":
+                        getCategoriesCommand.Execute(ref categories);
+                        addCategoryCommand.Execute(ref categories);
+                        break;
+                    case "UpdateCategory":
+                        getCategoriesCommand.Execute(ref categories);
+                        updateCategoryCommand.Execute(ref categories);
+                        break;
+                    case "DeleteCategory":
+                        getCategoriesCommand.Execute(ref categories);
+                        deleteCategoryCommand.Execute(ref categories);
+                        break;
                 }
                 userInputMenu = GetUserInput(rout);
             }

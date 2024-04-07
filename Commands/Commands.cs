@@ -1,6 +1,7 @@
 ﻿using InventoryManagementSystem.Models;
-using InventoryManagementSystem.Services.Items;
 using InventoryManagementSystem.Services.Authentication;
+using InventoryManagementSystem.Services.Categories;
+using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -191,7 +192,9 @@ namespace InventoryManagementSystem.Commands
                     Console.WriteLine("status: {0}", item.status);
                     Console.WriteLine("quantity: {0}", item.quantity);
                     Console.WriteLine("sold: {0}", item.sold);
-                    Console.WriteLine("minQuantity: {0}", item.minQuantity);
+                    Console.WriteLine("minimum quantity: {0}", item.minQuantity);
+                    if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
+                    else Console.WriteLine("category: NOT CATEGORIZED");
                     Console.WriteLine("=================");
                     count++;
                 }
@@ -206,14 +209,14 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        public void Execute(ref List<Item> items)
+        public void Execute(ref List<Item> items, ref List<ItemCategory> categories)
         {
             try
             {
                 string itemName = GetUserInput("Enter the name of the item you want to update:");
 
                 Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
-                if (itemToUpdate != null) ExecuteItemUpdate(ref itemToUpdate);
+                if (itemToUpdate != null) ExecuteItemUpdate(ref itemToUpdate, ref categories);
                 else Console.WriteLine($"Item with name '{itemName}' not found.");
 
             }
@@ -223,12 +226,13 @@ namespace InventoryManagementSystem.Commands
             }
         }
 
-        private void ExecuteItemUpdate(ref Item itemToUpdate)
+        private void ExecuteItemUpdate(ref Item itemToUpdate, ref List<ItemCategory> categories)
         {
             try
             {
                 Item updatedItem = new Item();
 
+                updatedItem.id = itemToUpdate.id;
                 string userInput =
                     GetUserInput("Do you want to update the name of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.name = GetUserInput("Enter the new name:");
@@ -282,6 +286,28 @@ namespace InventoryManagementSystem.Commands
                 if (userInput == "Y") updatedItem.minQuantity = int.Parse(GetUserInput("Enter the new value:"));
                 else updatedItem.minQuantity = itemToUpdate.minQuantity;
 
+                userInput =
+                    GetUserInput("Do you want to update the category of the item? (Y/N)").ToUpper();
+                if (userInput == "Y")
+                {
+                    userInput = GetUserInput("Enter the new value:");
+                    foreach (var category in categories)
+                    {
+                        if (category.name.Equals(userInput, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (updatedItem.category == null)
+                                updatedItem.category = new ItemCategory { id = category.id, name = userInput };
+                            else updatedItem.category.name = userInput;
+                            itemToUpdate.category = new ItemCategory { id = category.id, name = "" };
+                        }
+                    }
+                }
+                else updatedItem.category = itemToUpdate.category;
+
+                if (itemToUpdate.category == null)
+                {
+                    itemToUpdate.category = new ItemCategory { id = Guid.NewGuid(), name = "" };
+                }
 
                 if (itemToUpdate.name != updatedItem.name ||
                 itemToUpdate.description != updatedItem.description ||
@@ -289,13 +315,15 @@ namespace InventoryManagementSystem.Commands
                 itemToUpdate.status != updatedItem.status ||
                 itemToUpdate.quantity != updatedItem.quantity ||
                 itemToUpdate.sold != updatedItem.sold ||
-                itemToUpdate.minQuantity != updatedItem.minQuantity)
+                itemToUpdate.minQuantity != updatedItem.minQuantity ||
+                itemToUpdate.category != updatedItem.category)
                 {
                     if (_itemService.UpdateItem(ref itemToUpdate, updatedItem))
                         Console.WriteLine("Item updated successfully!");
 
                     else Console.WriteLine("Failed to update the item.");
                 }
+
                 else Console.WriteLine("No changes were made to the item.");
 
             }
@@ -342,4 +370,97 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+
+    public class GetCategoriesCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public GetCategoriesCommand(ICategoriesService categoriesService)
+        {
+            this._categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            _categoriesServic.GetCategories(ref categories);
+        }
+    }
+
+    public class AddCategoryCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public AddCategoryCommand(ICategoriesService categoriesService)
+        {
+            this._categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            string userInput = GetUserInput("What is name of Category? ");
+            _categoriesServic.AddCategory(userInput, ref categories);
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
+    public class UpdateCategoryCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public UpdateCategoryCommand(ICategoriesService categoriesService)
+        {
+            _categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            string userInput = GetUserInput("What is name of category do you want to change? ");
+
+            var category = categories.FirstOrDefault(c => c.name.Equals(userInput,
+                StringComparison.OrdinalIgnoreCase));
+            if (category != null)
+            {
+                userInput = GetUserInput("What is new name of category? ");
+                _categoriesServic.UpdateCategory(userInput, ref category, ref categories);
+            }
+            else
+            {
+                Console.WriteLine("There is no category with this name.");
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+    
+    public class DeleteCategoryCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public DeleteCategoryCommand(ICategoriesService categoriesService)
+        {
+            _categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            string userInput = GetUserInput("What is name of category do you want to delete? ");
+
+            if (categories.FirstOrDefault(c => c.name.Equals(userInput,
+                StringComparison.OrdinalIgnoreCase)) != null)
+            {
+                _categoriesServic.DeleteCategory(userInput, ref categories);
+            }
+            else
+            {
+                Console.WriteLine("There is no category with this name.");
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
 }
