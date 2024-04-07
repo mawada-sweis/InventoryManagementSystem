@@ -16,7 +16,41 @@ namespace InventoryManagementSystem.Services.Categories
 
         void ICategoriesService.AddCategory(string categoryName, ref List<ItemCategory> categories)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
+                {
+                    connection.Open();
+
+                    using (var command = new NpgsqlCommand())
+                    {
+                        Guid category_id = Guid.NewGuid();
+                        command.Connection = connection;
+                        command.CommandText = "INSERT INTO categories (category_id, category_name) VALUES (@id, @name)";
+                        command.Parameters.AddWithValue("@id", category_id);
+                        command.Parameters.AddWithValue("@name", categoryName);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            categories.Add(new ItemCategory
+                            {
+                                id = category_id,
+                                name = categoryName
+                            });
+                            Console.WriteLine($"Category '{categoryName}' added successfully.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to add category '{categoryName}'.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
         }
 
         void ICategoriesService.DeleteCategory(string categoryName, ref List<ItemCategory> categories)
@@ -55,6 +89,14 @@ namespace InventoryManagementSystem.Services.Categories
                                 }
                             }
                         }
+                    }
+                }
+
+                if (categories.Count > 0)
+                {
+                    foreach (var category in categories)
+                    {
+                        Console.WriteLine($"Name: {category.name}");
                     }
                 }
             }
