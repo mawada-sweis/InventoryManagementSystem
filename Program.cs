@@ -69,6 +69,7 @@ namespace InventoryManagementSystem
             Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
             Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(categoriesService);
+            Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(categoriesService);
             List<Item> items = new List<Item>();
             List<ItemCategory> categories = new List<ItemCategory>();
             string userInputMenu = GetUserInput(rout);
@@ -86,18 +87,20 @@ namespace InventoryManagementSystem
                             "Display All Items => DisplayItems\n" +
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n" +
-                            "Display All Categories => DisplayCategories");
+                            "Display All Categories => DisplayCategories\n" +
+                            "Add New Item Category => AddCategory");
 
                         break;
                     case "AddItem":
                         addItemCommand.Execute(ref items);
                         break;
                     case "DisplayItems":
+                        getCategoriesCommand.Execute(ref categories);
                         getItemsCommand.Execute(ref items);
                         break;
                     case "UpdateItem":
                         getItemsCommand.Execute(ref items, false);
-                        updateItemCommand.Execute(ref items);
+                        updateItemCommand.Execute(ref items, ref categories);
                         break;
                     case "DeleteItem":
                         getItemsCommand.Execute(ref items, false);
@@ -105,6 +108,9 @@ namespace InventoryManagementSystem
                         break;
                     case "DisplayCategories":
                         getCategoriesCommand.Execute(ref categories);
+                        break;
+                    case "AddCategory":
+                        addCategoryCommand.Execute(ref categories);
                         break;
                 }
                 userInputMenu = GetUserInput(rout);

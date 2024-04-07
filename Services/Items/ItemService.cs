@@ -153,7 +153,8 @@ namespace InventoryManagementSystem.Services.Items
                                    "item_status = @Status, " +
                                    "item_quantity_available = @QuantityAvailable, " +
                                    "item_sold = @Sold, " +
-                                   "item_min_quantity = @MinQuantity " +
+                                   "item_min_quantity = @MinQuantity, " +
+                                   "category_id = @CategoryID " +
                                    "WHERE item_id = @ID";
 
                     using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
@@ -165,6 +166,7 @@ namespace InventoryManagementSystem.Services.Items
                         command.Parameters.AddWithValue("@QuantityAvailable", newItem.quantity);
                         command.Parameters.AddWithValue("@Sold", newItem.sold);
                         command.Parameters.AddWithValue("@MinQuantity", newItem.minQuantity);
+                        command.Parameters.AddWithValue("@CategoryID", newItem.category.id);
                         command.Parameters.AddWithValue("@ID", item.id);
 
                         int rowsAffected = command.ExecuteNonQuery();
