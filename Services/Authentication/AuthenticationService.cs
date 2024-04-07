@@ -92,6 +92,7 @@ namespace InventoryManagementSystem.Services.Authentication
 
         public bool Register(string username, string email, string password, string address, UserType usertype = UserType.User)
         {
+            if(IsEmailExist(email)) return false;
             (byte[] hashSalt, string hashedPassword) = HashPasword(password);
 
             using (var conn = new NpgsqlConnection(this._connectionString))
