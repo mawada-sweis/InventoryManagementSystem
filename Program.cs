@@ -71,7 +71,7 @@ namespace InventoryManagementSystem
             Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(categoriesService);
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(categoriesService);
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(categoriesService);
-
+            Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(categoriesService);
             List<Item> items = new List<Item>();
             List<ItemCategory> categories = new List<ItemCategory>();
             string userInputMenu = GetUserInput(rout);
@@ -91,7 +91,8 @@ namespace InventoryManagementSystem
                             "Delete Item by Name => DeleteItem\n" +
                             "Display All Categories => DisplayCategories\n" +
                             "Add New Item Category => AddCategory\n" +
-                            "Update Category by NAme => UpdateCategory");
+                            "Update Category by Name => UpdateCategory\n"+
+                            "Delete Category by Name => DeleteCategory");
 
                         break;
                     case "AddItem":
@@ -113,11 +114,16 @@ namespace InventoryManagementSystem
                         getCategoriesCommand.Execute(ref categories);
                         break;
                     case "AddCategory":
+                        getCategoriesCommand.Execute(ref categories);
                         addCategoryCommand.Execute(ref categories);
                         break;
                     case "UpdateCategory":
                         getCategoriesCommand.Execute(ref categories);
                         updateCategoryCommand.Execute(ref categories);
+                        break;
+                    case "DeleteCategory":
+                        getCategoriesCommand.Execute(ref categories);
+                        deleteCategoryCommand.Execute(ref categories);
                         break;
                 }
                 userInputMenu = GetUserInput(rout);

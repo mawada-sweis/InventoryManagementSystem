@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InventoryManagementSystem.Services.Categories
 {
@@ -55,7 +56,28 @@ namespace InventoryManagementSystem.Services.Categories
 
         void ICategoriesService.DeleteCategory(string categoryName, ref List<ItemCategory> categories)
         {
-            throw new NotImplementedException();
+            ItemCategory categoryToDelete =
+                categories.FirstOrDefault(c => c.name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
+            if (categoryToDelete != null)
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
+                {
+                    connection.Open();
+                    string query = "DELETE FROM categories WHERE category_id = @CategoryID";
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@CategoryID", categoryToDelete.id);
+                        int rowsAffected = command.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            categories.Remove(categoryToDelete);
+                            Console.WriteLine("Category deleted successfully.");
+                        }
+                        else Console.WriteLine("Category not found in the database.");
+                    }
+                }
+            }
+            else Console.WriteLine("Category not found.");
         }
 
         void ICategoriesService.GetCategories(ref List<ItemCategory> categories)

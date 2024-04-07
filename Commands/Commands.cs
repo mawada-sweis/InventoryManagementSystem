@@ -433,4 +433,34 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+    
+    public class DeleteCategoryCommand
+    {
+        private readonly ICategoriesService _categoriesServic;
+        public DeleteCategoryCommand(ICategoriesService categoriesService)
+        {
+            _categoriesServic = categoriesService;
+        }
+        public void Execute(ref List<ItemCategory> categories)
+        {
+            string userInput = GetUserInput("What is name of category do you want to delete? ");
+
+            if (categories.FirstOrDefault(c => c.name.Equals(userInput,
+                StringComparison.OrdinalIgnoreCase)) != null)
+            {
+                _categoriesServic.DeleteCategory(userInput, ref categories);
+            }
+            else
+            {
+                Console.WriteLine("There is no category with this name.");
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
 }
