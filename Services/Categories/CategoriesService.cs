@@ -106,9 +106,51 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
-        void ICategoriesService.UpdateCategory(string categoryName, ref List<ItemCategory> categories)
+        void ICategoriesService.UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories)
         {
-            throw new NotImplementedException();
+            using (var connection = new NpgsqlConnection(_connectionsString))
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Update category name in the categories table
+                        using (var command = new NpgsqlCommand())
+                        {
+                            command.Connection = connection;
+                            command.CommandText = "UPDATE categories SET category_name = @NewName " +
+                                "WHERE category_id = @CategoryID";
+                            command.Parameters.AddWithValue("NewName", categoryName);
+                            command.Parameters.AddWithValue("CategoryID", category.id);
+                            int rowsAffected = command.ExecuteNonQuery();
+                            if (rowsAffected > 0)
+                            {
+                                Console.WriteLine("Categroy updated successfully");
+
+                                // Update the corresponding ItemCategory object in the list
+                                foreach (var _category in categories)
+                                {
+                                    if (_category.name.Equals(category.name, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _category.name = categoryName;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error updating category: " + ex.Message);
+                        transaction.Rollback();
+                    }
+                }
+            }
+
         }
     }
 }

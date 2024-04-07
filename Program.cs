@@ -70,6 +70,8 @@ namespace InventoryManagementSystem
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(itemService);
             Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(categoriesService);
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(categoriesService);
+            Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(categoriesService);
+
             List<Item> items = new List<Item>();
             List<ItemCategory> categories = new List<ItemCategory>();
             string userInputMenu = GetUserInput(rout);
@@ -88,7 +90,8 @@ namespace InventoryManagementSystem
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n" +
                             "Display All Categories => DisplayCategories\n" +
-                            "Add New Item Category => AddCategory");
+                            "Add New Item Category => AddCategory\n" +
+                            "Update Category by NAme => UpdateCategory");
 
                         break;
                     case "AddItem":
@@ -111,6 +114,10 @@ namespace InventoryManagementSystem
                         break;
                     case "AddCategory":
                         addCategoryCommand.Execute(ref categories);
+                        break;
+                    case "UpdateCategory":
+                        getCategoriesCommand.Execute(ref categories);
+                        updateCategoryCommand.Execute(ref categories);
                         break;
                 }
                 userInputMenu = GetUserInput(rout);
