@@ -26,7 +26,7 @@ namespace InventoryManagementSystem.Commands
             {
                 Console.WriteLine("Login successful");
                 isAuthenticated = true;
-                GetUserInfo(ref user);
+                _authService.GetUserInfo(ref user);
             }
             else
             {
@@ -41,12 +41,6 @@ namespace InventoryManagementSystem.Commands
             Console.Write(prompt);
             return Console.ReadLine().Trim();
         }
-
-        private void GetUserInfo(ref User user)
-        {
-            _authService.GetUserInfo(ref user);
-        }
-
     }
 
     public class SignupCommand
@@ -105,23 +99,14 @@ namespace InventoryManagementSystem.Commands
         public void Execute(ref bool isAuthenticated, ref User user)
         {
             string newPassword = GetUserInput("New password: ");
-            string resetResult = _authService.resetPassword(ref user, newPassword);
+            bool resetResult = _authService.resetPassword(ref user, newPassword);
 
-            switch (resetResult)
+            if (resetResult)
             {
-                case "Success":
-                    Console.WriteLine("Password updated successfully");
-                    isAuthenticated = true;
-                    break;
-
-                case "Same":
-                    Console.WriteLine("New password same as current one!");
-                    break;
-
-                case "":
-                    Console.WriteLine("Update password failed");
-                    break;
+                Console.WriteLine("Password updated successfully");
+                isAuthenticated = true;
             }
+            else Console.WriteLine("New password same as current one!");
         }
         private string GetUserInput(string prompt)
         {
@@ -433,7 +418,7 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
-    
+
     public class DeleteCategoryCommand
     {
         private readonly ICategoriesService _categoriesServic;

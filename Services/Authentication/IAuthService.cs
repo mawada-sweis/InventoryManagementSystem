@@ -9,7 +9,7 @@ namespace InventoryManagementSystem.Services.Authentication
         bool Register(string username, string email, string password, string address, UserType usertype = UserType.User);
         bool IsEmailExist(string email);
         bool Login(string email, string password, bool reset = false);
-        string resetPassword(ref User user, string newPassword);
+        bool resetPassword(ref User user, string newPassword);
         void GetUserInfo(ref User user);
     }
 }

@@ -92,7 +92,7 @@ namespace InventoryManagementSystem.Services.Authentication
 
         public bool Register(string username, string email, string password, string address, UserType usertype = UserType.User)
         {
-            if(IsEmailExist(email)) return false;
+            if (IsEmailExist(email)) return false;
             (byte[] hashSalt, string hashedPassword) = HashPasword(password);
 
             using (var conn = new NpgsqlConnection(this._connectionString))
@@ -119,9 +119,9 @@ namespace InventoryManagementSystem.Services.Authentication
             return true;
         }
 
-        public string resetPassword(ref User user, string newPassword)
+        public bool resetPassword(ref User user, string newPassword)
         {
-            if (Login(user.userEmail, newPassword, true)) return "Same";
+            if (Login(user.userEmail, newPassword, true)) return false;
 
             (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword);
 
@@ -143,11 +143,11 @@ namespace InventoryManagementSystem.Services.Authentication
                     {
                         user.userPassword = hashedPassword;
                         user.userSalt = stringSalt;
-                        return "Success";
+                        return true;
                     }
+                    else return false;
                 }
             }
-            return "";
         }
 
         public void GetUserInfo(ref User user)

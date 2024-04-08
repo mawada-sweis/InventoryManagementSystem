@@ -2,7 +2,6 @@
 using InventoryManagementSystem.Services.Authentication;
 using NUnit.Framework;
 using System;
-using System.Globalization;
 
 namespace InventoryManagementSystem.TestProject
 {
@@ -80,10 +79,10 @@ namespace InventoryManagementSystem.TestProject
             User admin = new User { userEmail = adminEmail };
 
             _authService.GetUserInfo(ref user);
-            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo("Success"));
+            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo(true));
 
             _authService.GetUserInfo(ref admin);
-            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo("Success"));
+            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo(true));
         }
 
         [Test, Order(6)]
@@ -94,10 +93,10 @@ namespace InventoryManagementSystem.TestProject
             User admin = new User { userEmail = adminEmail };
 
             _authService.GetUserInfo(ref user);
-            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo("Same"));
-            
+            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo(false));
+
             _authService.GetUserInfo(ref admin);
-            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo("Same"));
+            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo(false));
         }
     }
 }
