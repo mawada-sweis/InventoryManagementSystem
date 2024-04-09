@@ -2,7 +2,6 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace InventoryManagementSystem.Services.Categories
 {
@@ -54,30 +53,24 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
-        void ICategoriesService.DeleteCategory(string categoryName, ref List<ItemCategory> categories)
+        void ICategoriesService.DeleteCategory(ref ItemCategory categoryToDelete, ref List<ItemCategory> categories)
         {
-            ItemCategory categoryToDelete =
-                categories.FirstOrDefault(c => c.name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
-            if (categoryToDelete != null)
+            using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
             {
-                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
+                connection.Open();
+                string query = "DELETE FROM categories WHERE category_id = @CategoryID";
+                using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                 {
-                    connection.Open();
-                    string query = "DELETE FROM categories WHERE category_id = @CategoryID";
-                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    command.Parameters.AddWithValue("@CategoryID", categoryToDelete.id);
+                    int rowsAffected = command.ExecuteNonQuery();
+                    if (rowsAffected > 0)
                     {
-                        command.Parameters.AddWithValue("@CategoryID", categoryToDelete.id);
-                        int rowsAffected = command.ExecuteNonQuery();
-                        if (rowsAffected > 0)
-                        {
-                            categories.Remove(categoryToDelete);
-                            Console.WriteLine("Category deleted successfully.");
-                        }
-                        else Console.WriteLine("Category not found in the database.");
+                        categories.Remove(categoryToDelete);
+                        Console.WriteLine("Category deleted successfully.");
                     }
+                    else Console.WriteLine("Category not found in the database.");
                 }
             }
-            else Console.WriteLine("Category not found.");
         }
 
         void ICategoriesService.GetCategories(ref List<ItemCategory> categories)
@@ -113,14 +106,6 @@ namespace InventoryManagementSystem.Services.Categories
                         }
                     }
                 }
-
-                if (categories.Count > 0)
-                {
-                    foreach (var category in categories)
-                    {
-                        Console.WriteLine($"Name: {category.name}");
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -138,7 +123,6 @@ namespace InventoryManagementSystem.Services.Categories
                 {
                     try
                     {
-                        // Update category name in the categories table
                         using (var command = new NpgsqlCommand())
                         {
                             command.Connection = connection;
@@ -149,20 +133,10 @@ namespace InventoryManagementSystem.Services.Categories
                             int rowsAffected = command.ExecuteNonQuery();
                             if (rowsAffected > 0)
                             {
+                                category.name = categoryName;
                                 Console.WriteLine("Categroy updated successfully");
-
-                                // Update the corresponding ItemCategory object in the list
-                                foreach (var _category in categories)
-                                {
-                                    if (_category.name.Equals(category.name, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        _category.name = categoryName;
-                                        break;
-                                    }
-                                }
                             }
                         }
-
                         transaction.Commit();
                     }
                     catch (Exception ex)
