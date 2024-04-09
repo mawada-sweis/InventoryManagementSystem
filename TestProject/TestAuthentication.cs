@@ -11,20 +11,33 @@ namespace InventoryManagementSystem.TestProject
         private IAuthService _authService;
         private string _connectionString;
 
-        string validUserEmail = "mawada@gmail.com";
-        string validUserPass = "123321";
-        string validAdminEmail = "sweis@gmail.com";
-        string validAdminPass = "159951";
+        User existUser = new User
+        {
+            userEmail = "mawada@gmail.com",
+            userPassword = "123321"
+        };
 
-        string userUsername = "TestUserUsername";
-        string userEmail = "TestRunUser@gmail.com";
-        string userPassword = "123";
-        string userAddress = "Test user address";
-
-        string adminUsername = "TestAdminUsername";
-        string adminEmail = "TestRunAdmin@gmail.com";
-        string adminPassword = "123";
-        string adminAddress = "Test Admin address";
+        User existAdmin = new User
+        {
+            userEmail = "sweis@gmail.com",
+            userPassword = "159951"
+        };
+        User newUser = new User
+        {
+            userName = "TestUserUsername",
+            userEmail = "TestRunUser@gmail.com",
+            userPassword = "123",
+            userAddress = "Test user address",
+            userType = UserType.User,
+        };
+        User newAdmin = new User
+        {
+            userName = "TestAdminUsername",
+            userEmail = "TestRunAdmin@gmail.com",
+            userPassword = "123",
+            userAddress = "Test Admin address",
+            userType = UserType.Admin
+        };
 
         [SetUp]
         public void Setup()
@@ -41,8 +54,17 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(1)]
         public void TestLogin_Valid()
         {
-            Assert.That(_authService.Login(validUserEmail, validUserPass), Is.EqualTo(true));
-            Assert.That(_authService.Login(validAdminEmail, validAdminPass), Is.EqualTo(true));
+            Assert.That(_authService.Login(existUser.userEmail, existUser.userPassword), Is.EqualTo(true));
+            Assert.That(_authService.Login(existAdmin.userEmail, existAdmin.userPassword), Is.EqualTo(true));
+        }
+
+        [Test]
+        public void TestRole()
+        {
+            _authService.GetUserInfo(ref existUser);
+            Assert.That(existUser.userType, Is.EqualTo(UserType.User));
+            _authService.GetUserInfo(ref existAdmin);
+            Assert.That(existAdmin.userType, Is.EqualTo(UserType.Admin));
         }
 
         [Test, Order(2)]
@@ -60,43 +82,35 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(3)]
         public void TestSignup_valid()
         {
-            Assert.That(_authService.Register(userUsername, userEmail, userPassword, userAddress, UserType.User), Is.EqualTo(true));
-            Assert.That(_authService.Register(adminUsername, adminEmail, adminPassword, adminAddress, UserType.Admin), Is.EqualTo(true));
+            Assert.That(_authService.Register(newUser), Is.EqualTo(true));
+            Assert.That(_authService.Register(newAdmin), Is.EqualTo(true));
         }
 
         [Test, Order(4)]
         public void TestSignup_Invalid()
         {
-            Assert.That(_authService.Register(userUsername, userEmail, userPassword, userAddress, UserType.User), Is.EqualTo(false));
-            Assert.That(_authService.Register(adminUsername, adminEmail, adminPassword, adminAddress, UserType.Admin), Is.EqualTo(false));
+            Assert.That(_authService.Register(newUser), Is.EqualTo(false));
+            Assert.That(_authService.Register(newAdmin), Is.EqualTo(false));
         }
 
         [Test, Order(5)]
         public void TestRestPass_valid()
         {
+            _authService.GetUserInfo(ref newUser);
+            Assert.That(_authService.resetPassword(ref newUser, "456"), Is.EqualTo(true));
 
-            User user = new User { userEmail = userEmail };
-            User admin = new User { userEmail = adminEmail };
-
-            _authService.GetUserInfo(ref user);
-            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo(true));
-
-            _authService.GetUserInfo(ref admin);
-            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo(true));
+            _authService.GetUserInfo(ref newAdmin);
+            Assert.That(_authService.resetPassword(ref newAdmin, "1234"), Is.EqualTo(true));
         }
 
         [Test, Order(6)]
         public void TestRestPass_invalid()
         {
+            _authService.GetUserInfo(ref newUser);
+            Assert.That(_authService.resetPassword(ref newUser, "456"), Is.EqualTo(false));
 
-            User user = new User { userEmail = userEmail };
-            User admin = new User { userEmail = adminEmail };
-
-            _authService.GetUserInfo(ref user);
-            Assert.That(_authService.resetPassword(ref user, "456"), Is.EqualTo(false));
-
-            _authService.GetUserInfo(ref admin);
-            Assert.That(_authService.resetPassword(ref admin, "1234"), Is.EqualTo(false));
+            _authService.GetUserInfo(ref newAdmin);
+            Assert.That(_authService.resetPassword(ref newAdmin, "1234"), Is.EqualTo(false));
         }
     }
 }
