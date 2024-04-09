@@ -5,6 +5,7 @@ using InventoryManagementSystem.Services.Categories;
 using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem
@@ -13,7 +14,8 @@ namespace InventoryManagementSystem
     {
         public static class Globals
         {
-            public static string ConnectionString { get; } = $"Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password={Environment.GetEnvironmentVariable("PG_PASSWORD")}";
+            static readonly string connectionStringTemplate = ConfigurationManager.AppSettings["ConnectionString"];
+            public static readonly string ConnectionString = connectionStringTemplate.Replace("%PG_PASSWORD%", Environment.GetEnvironmentVariable("PG_PASSWORD"));
         }
         static string GetUserInput([Optional] string rout)
         {
