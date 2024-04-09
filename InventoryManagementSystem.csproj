@@ -114,6 +114,7 @@
     <Compile Include="Services\Items\IItemService.cs" />
     <Compile Include="Services\Items\ItemService.cs" />
     <Compile Include="TestProject\TestAuthentication.cs" />
+    <Compile Include="TestProject\TestItemServices.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

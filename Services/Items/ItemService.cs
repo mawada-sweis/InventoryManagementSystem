@@ -25,9 +25,11 @@ namespace InventoryManagementSystem.Services.Items
         {
             Guid id = Guid.NewGuid();
 
-            string query = "INSERT INTO items (item_id, item_name, item_description, item_price, item_status, " +
-                "item_quantity_available, item_sold, item_min_quantity) " +
-                "VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity)";
+            string query = @"INSERT INTO items (item_id, item_name, item_description, item_price, item_status,
+                item_quantity_available, item_sold, item_min_quantity)
+                VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity)
+                ON CONFLICT (item_name) DO NOTHING                    
+            ";
             using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
