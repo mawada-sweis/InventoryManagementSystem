@@ -27,7 +27,7 @@ namespace InventoryManagementSystem.TestProject
         }
 
         [Test, Order(1)]
-        public void TestItem_valid()
+        public void TestAddItem_valid()
         {
             Assert.That(
                 _itemService.AddItem(
@@ -42,7 +42,7 @@ namespace InventoryManagementSystem.TestProject
         }
 
         [Test, Order(2)]
-        public void TestItem_invalid()
+        public void TestAddItem_invalid()
         {
             Assert.That(
                 _itemService.AddItem(
