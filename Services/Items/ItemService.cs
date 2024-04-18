@@ -60,7 +60,7 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
-        public void DeleteItem(ref List<Item> items, Guid guid)
+        public bool DeleteItem(ref List<Item> items, Guid guid)
         {
             try
             {
@@ -78,15 +78,20 @@ namespace InventoryManagementSystem.Services.Items
                         {
                             Console.WriteLine($"Deleted successfully");
                             items.RemoveAll(item => item.id == guid);
+                            return true;
                         }
-                        else Console.WriteLine($"Failed to delete item");
-
+                        else
+                        {
+                            Console.WriteLine($"Failed to delete item");
+                            return false;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
+                return false;
             }
         }
 

@@ -16,6 +16,6 @@ namespace InventoryManagementSystem.Services.Items
             int sold = 0
             );
         bool UpdateItem(ref Item item, Item newItem);
-        void DeleteItem(ref List<Item> items, Guid guid);
+        bool DeleteItem(ref List<Item> items, Guid guid);
     }
 }
