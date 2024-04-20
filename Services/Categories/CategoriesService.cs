@@ -73,7 +73,7 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
-        void ICategoriesService.GetCategories(ref List<ItemCategory> categories)
+        bool ICategoriesService.GetCategories(ref List<ItemCategory> categories)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace InventoryManagementSystem.Services.Categories
                             if (!reader.HasRows)
                             {
                                 Console.WriteLine("No categories until now");
-                                return;
+                                return false;
                             }
                             while (reader.Read())
                             {
@@ -103,6 +103,7 @@ namespace InventoryManagementSystem.Services.Categories
                                     categories.Add(category);
                                 }
                             }
+                            return true;
                         }
                     }
                 }
@@ -110,6 +111,7 @@ namespace InventoryManagementSystem.Services.Categories
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
+                return false;
             }
         }
 

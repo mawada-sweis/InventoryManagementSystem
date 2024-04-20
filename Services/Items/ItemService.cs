@@ -13,23 +13,12 @@ namespace InventoryManagementSystem.Services.Items
             this._connectionString = connectionString;
         }
 
-        public bool AddItem(
-            string name,
-            string description,
-            int price,
-            ItemStatus status,
-            int quantity,
-            int minQuantity,
-            int sold
-            )
+        public bool AddItem(Item newItem, ref List<Item> items)
         {
-            Guid id = Guid.NewGuid();
-
             string query = @"INSERT INTO items (item_id, item_name, item_description, item_price, item_status,
-                item_quantity_available, item_sold, item_min_quantity)
-                VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity)
-                ON CONFLICT (item_name) DO NOTHING                    
-            ";
+                item_quantity_available, item_sold, item_min_quantity, category_id)
+                VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity, @category)
+                ON CONFLICT (item_name) DO NOTHING";
             using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
@@ -37,23 +26,24 @@ namespace InventoryManagementSystem.Services.Items
                 using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                 {
                     // Add parameters to the command
-                    command.Parameters.AddWithValue("@id", id);
-                    command.Parameters.AddWithValue("@name", name);
-                    command.Parameters.AddWithValue("@description", description);
-                    command.Parameters.AddWithValue("@price", price);
-                    command.Parameters.AddWithValue("@status", status.ToString());
-                    command.Parameters.AddWithValue("@quantityAvailable", quantity);
-                    command.Parameters.AddWithValue("@sold", sold);
-                    command.Parameters.AddWithValue("@minQuantity", minQuantity);
+                    command.Parameters.AddWithValue("@id", newItem.id);
+                    command.Parameters.AddWithValue("@name", newItem.name);
+                    command.Parameters.AddWithValue("@description", newItem.description);
+                    command.Parameters.AddWithValue("@price", newItem.price);
+                    command.Parameters.AddWithValue("@status", newItem.status.ToString());
+                    command.Parameters.AddWithValue("@quantityAvailable", newItem.quantity);
+                    command.Parameters.AddWithValue("@sold", newItem.sold);
+                    command.Parameters.AddWithValue("@minQuantity", newItem.minQuantity);
+                    command.Parameters.AddWithValue("@category", newItem.category.id);
 
                     if (command.ExecuteNonQuery() > 0)
                     {
-                        Console.WriteLine($"{name} addedd successfully");
+                        items.Add(newItem);
                         return true;
                     }
                     else
                     {
-                        Console.WriteLine($"{name} addedd faild");
+                        Console.WriteLine($"{newItem.name} addedd faild");
                         return false;
                     }
                 }
@@ -95,7 +85,7 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
-        public List<Item> GetItems(ref List<Item> items)
+        public void GetItems(ref List<Item> items)
         {
             try
             {
@@ -136,12 +126,10 @@ namespace InventoryManagementSystem.Services.Items
                         }
                     }
                 }
-                return items;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
-                return items;
             }
         }
 
@@ -162,7 +150,15 @@ namespace InventoryManagementSystem.Services.Items
                                    "item_sold = @Sold, " +
                                    "item_min_quantity = @MinQuantity, " +
                                    "category_id = @CategoryID " +
-                                   "WHERE item_id = @ID";
+                                   "WHERE item_id = @ID " +
+                                   "AND (item_name <> @Name " +
+                                   "OR item_description <> @Description " +
+                                   "OR item_price <> @Price " +
+                                   "OR item_status <> @Status " +
+                                   "OR item_quantity_available <> @QuantityAvailable " +
+                                   "OR item_sold <> @Sold " +
+                                   "OR item_min_quantity <> @MinQuantity " +
+                                   "OR category_id <> @CategoryID)";
 
                     using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                     {

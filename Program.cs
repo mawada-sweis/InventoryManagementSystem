@@ -3,7 +3,6 @@ using InventoryManagementSystem.Models;
 using InventoryManagementSystem.Services.Authentication;
 using InventoryManagementSystem.Services.Categories;
 using InventoryManagementSystem.Services.Items;
-using NUnit.Framework.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -17,11 +16,11 @@ namespace InventoryManagementSystem
         {
             static readonly string connectionStringTemplate = ConfigurationManager.AppSettings["ConnectionString"];
             public static readonly string ConnectionString = connectionStringTemplate.Replace("%PG_PASSWORD%", Environment.GetEnvironmentVariable("PG_PASSWORD"));
-            
+
             public static readonly IAuthService authentication = new AuthenticationService(ConnectionString);
             public static readonly IItemService itemService = new ItemService(ConnectionString);
             public static readonly ICategoriesService categoriesService = new CategoriesService(ConnectionString);
-            
+
             public static readonly Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             public static Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
@@ -29,7 +28,7 @@ namespace InventoryManagementSystem
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
-            
+
 
         }
         private static string ReadPassword()
@@ -121,14 +120,14 @@ namespace InventoryManagementSystem
                         break;
 
                     case "menu":
-                        Console.WriteLine("======Menu======\n"+
-                            "Add Item => AddItem\n"+
-                            "Display All Items => DisplayItems\n"+
-                            "Update Item by Name => UpdateItem\n"+
-                            "Delete Item by Name => DeleteItem\n"+
-                            "Display All Categories => DisplayCategories\n"+
-                            "Add New Item Category => AddCategory\n"+
-                            "Update Category by Name => UpdateCategory\n"+
+                        Console.WriteLine("======Menu======\n" +
+                            "Add Item => AddItem\n" +
+                            "Display All Items => DisplayItems\n" +
+                            "Update Item by Name => UpdateItem\n" +
+                            "Delete Item by Name => DeleteItem\n" +
+                            "Display All Categories => DisplayCategories\n" +
+                            "Add New Item Category => AddCategory\n" +
+                            "Update Category by Name => UpdateCategory\n" +
                             "Delete Category by Name => DeleteCategory");
                         break;
                     case "additem":
@@ -137,7 +136,7 @@ namespace InventoryManagementSystem
                     case "displayitems":
                         if (Items.Count == 0)
                         {
-                            Console.WriteLine("There is no categories yet");
+                            Console.WriteLine("There is no items yet");
                             break;
                         }
                         Console.WriteLine("Items:");

@@ -5,7 +5,6 @@ using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -84,7 +83,7 @@ namespace InventoryManagementSystem.Commands
             bool resetResult = _authService.resetPassword(ref user, newPassword);
 
             if (resetResult) Console.WriteLine("Password updated successfully");
-            
+
             else Console.WriteLine("New password same as current one!");
         }
         private string GetUserInput(string prompt)
@@ -106,7 +105,7 @@ namespace InventoryManagementSystem.Commands
         {
             Item item = new Item();
             string userInput = GetUserInput("Item name: ");
-            if(!items.Any(itemSearched => itemSearched.name == userInput))
+            if (!items.Any(itemSearched => itemSearched.name == userInput))
             {
                 Console.WriteLine("{0} item exist");
                 return;
@@ -122,15 +121,10 @@ namespace InventoryManagementSystem.Commands
             item.quantity = int.Parse(GetUserInput("Quantity availible: "));
             item.sold = int.Parse(GetUserInput("Number of sold item: "));
             item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
-
-            if (_itemService.AddItem(
-                                item.name,
-                                item.description,
-                                item.price,
-                                item.status,
-                                item.quantity,
-                                item.minQuantity,
-                                item.sold)) items.Add(item);
+            item.id = Guid.NewGuid();
+            if (_itemService.AddItem(item, ref items))
+                Console.WriteLine($"{item.name} addedd successfully");
+            else Console.WriteLine($"{item.name} addedd faild");
 
         }
         private string GetUserInput(string prompt)
@@ -149,7 +143,7 @@ namespace InventoryManagementSystem.Commands
         }
         public void Execute(ref List<Item> items)
         {
-            items = _itemService.GetItems(ref items);
+            _itemService.GetItems(ref items);
         }
     }
 

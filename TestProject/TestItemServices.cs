@@ -1,8 +1,10 @@
 ﻿using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Services.Categories;
 using InventoryManagementSystem.Services.Items;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InventoryManagementSystem.TestProject
 {
@@ -10,6 +12,7 @@ namespace InventoryManagementSystem.TestProject
     public class TestItemService
     {
         private IItemService _itemService;
+        private ICategoriesService _categoriesService;
         private string _connectionString;
         List<Item> items = new List<Item>();
 
@@ -24,7 +27,7 @@ namespace InventoryManagementSystem.TestProject
             quantity = 0
         };
 
-        Item newItem = new Item();
+        List<ItemCategory> categories = new List<ItemCategory>();
 
         [SetUp]
         public void SetUp()
@@ -36,55 +39,58 @@ namespace InventoryManagementSystem.TestProject
                 $"Username=postgres;" +
                 $"Password={Environment.GetEnvironmentVariable("PG_PASSWORD")}";
             _itemService = new ItemService(_connectionString);
+            _categoriesService = new CategoriesService(_connectionString);
+            _categoriesService.GetCategories(ref categories);
         }
 
         [Test, Order(1)]
         public void TestAddItem_valid()
         {
+            item.category = categories[0];
+            item.id = Guid.NewGuid();
             Assert.That(
-                _itemService.AddItem(
-                    "Test add item",
-                    "this will test if the system add item correctly.",
-                    20,
-                    ItemStatus.InStock,
-                    1,
-                    0,
-                    0),
+                _itemService.AddItem(item, ref items),
                 Is.EqualTo(true));
         }
-        
-        [Test, Order(2)]
+
+        [Test, Order(3)]
         public void TestAddItem_invalid()
         {
+            item = items.FirstOrDefault(item => item.name.Trim() == "Test add item".Trim());
             Assert.That(
-                _itemService.AddItem(
-                    item.name,
-                    item.description,
-                    item.price,
-                    item.status,
-                    item.quantity,
-                    item.minQuantity,
-                    item.sold
-                ),
+                _itemService.AddItem(item, ref items),
                 Is.EqualTo(false));
         }
-        [Test, Order(3)]
+
+        [Test, Order(2)]
         public void TestGetItems()
         {
             _itemService.GetItems(ref items);
             Assert.That(items.Count, Is.GreaterThan(0));
         }
 
-        /*[Test, Order(5)]
+        [Test, Order(4)]
         public void TestUpdateItem_valid()
         {
-
-            newItem = item;
-            newItem.name = "Test update item";
-            newItem.description = "updated description";
+            item = items.FirstOrDefault(item => item.name == "Test add item");
+            Item newItem = new Item
+            {
+                id = item.id,
+                name = "Test update item",
+                description = "updated description",
+                price = item.price,
+                status = item.status,
+                quantity = item.quantity,
+                sold = item.sold,
+                minQuantity = item.minQuantity,
+                category = categories[0]
+            };
 
             Assert.That(_itemService.UpdateItem(ref item, newItem), Is.EqualTo(true));
-        }*/
+
+            int index = items.FindIndex(searchItem => searchItem.id == item.id);
+            items[index] = item;
+        }
 
         [Test, Order(5)]
         public void TestUpdateItem_invalid()
@@ -92,11 +98,17 @@ namespace InventoryManagementSystem.TestProject
             Assert.That(_itemService.UpdateItem(ref item, item), Is.EqualTo(false));
         }
 
-        [Test, Order(7)]
+        [Test, Order(6)]
         public void TestDeleteItem_valid()
         {
-            Guid newId = Guid.Parse("727d059b-5067-4eb4-b92f-dbfac40c7142");
-            Assert.That(_itemService.DeleteItem(ref items, newId), Is.EqualTo(true));
+            item = items.FirstOrDefault(item => item.name == "Test update item");
+            Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(true));
+        }
+
+        [Test, Order(7)]
+        public void TestDeleteItem_invalid()
+        {
+            Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(false));
         }
     }
 }
