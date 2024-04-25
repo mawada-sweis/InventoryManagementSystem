@@ -31,17 +31,6 @@ namespace InventoryManagementSystem.Models
         public string userAddress { get; set; }
         public string userSalt { get; set; }
         public UserType userType { get; set; }
-        public List<Order> orders { get; set; }
-    }
-
-    public class Order
-    {
-        public Guid id { get; set; }
-        public DateTime date { get; set; }
-        public List<Item> items { get; set; }
-        public Guid userID { get; set; }
-        public int total { get; set; }
-        public OrderStatus status { get; set; }
     }
 
     public enum UserType
@@ -55,18 +44,6 @@ namespace InventoryManagementSystem.Models
         InStock,
         OutOfStock,
         LowStock,
-        Unknown
-    }
-
-    public enum OrderStatus
-    {
-        Pending,
-        Autherized,
-        Paid,
-        Shipping,
-        Completed,
-        Expired,
-        Canceled,
         Unknown
     }
 }
