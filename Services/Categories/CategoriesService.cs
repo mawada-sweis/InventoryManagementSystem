@@ -2,7 +2,6 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace InventoryManagementSystem.Services.Categories
 {
@@ -15,7 +14,7 @@ namespace InventoryManagementSystem.Services.Categories
             this._connectionsString = connectionsString;
         }
 
-        void ICategoriesService.AddCategory(string categoryName, ref List<ItemCategory> categories)
+        bool ICategoriesService.AddCategory(ItemCategory category, ref List<ItemCategory> categories)
         {
             try
             {
@@ -25,62 +24,54 @@ namespace InventoryManagementSystem.Services.Categories
 
                     using (var command = new NpgsqlCommand())
                     {
-                        Guid category_id = Guid.NewGuid();
                         command.Connection = connection;
                         command.CommandText = "INSERT INTO categories (category_id, category_name) VALUES (@id, @name)";
-                        command.Parameters.AddWithValue("@id", category_id);
-                        command.Parameters.AddWithValue("@name", categoryName);
+                        command.Parameters.AddWithValue("@id", category.id);
+                        command.Parameters.AddWithValue("@name", category.name);
 
                         int rowsAffected = command.ExecuteNonQuery();
                         if (rowsAffected > 0)
                         {
                             categories.Add(new ItemCategory
                             {
-                                id = category_id,
-                                name = categoryName
+                                id = category.id,
+                                name = category.name
                             });
-                            Console.WriteLine($"Category '{categoryName}' added successfully.");
+                            return true;
                         }
-                        else
-                        {
-                            Console.WriteLine($"Failed to add category '{categoryName}'.");
-                        }
+                        else return false;
+
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
+                return false;
             }
         }
 
-        void ICategoriesService.DeleteCategory(string categoryName, ref List<ItemCategory> categories)
+        bool ICategoriesService.DeleteCategory(ref ItemCategory categoryToDelete, ref List<ItemCategory> categories)
         {
-            ItemCategory categoryToDelete =
-                categories.FirstOrDefault(c => c.name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
-            if (categoryToDelete != null)
+            using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
             {
-                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
+                connection.Open();
+                string query = "DELETE FROM categories WHERE category_id = @CategoryID";
+                using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                 {
-                    connection.Open();
-                    string query = "DELETE FROM categories WHERE category_id = @CategoryID";
-                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    command.Parameters.AddWithValue("@CategoryID", categoryToDelete.id);
+                    int rowsAffected = command.ExecuteNonQuery();
+                    if (rowsAffected > 0)
                     {
-                        command.Parameters.AddWithValue("@CategoryID", categoryToDelete.id);
-                        int rowsAffected = command.ExecuteNonQuery();
-                        if (rowsAffected > 0)
-                        {
-                            categories.Remove(categoryToDelete);
-                            Console.WriteLine("Category deleted successfully.");
-                        }
-                        else Console.WriteLine("Category not found in the database.");
+                        categories.Remove(categoryToDelete);
+                        return true;
                     }
+                    else return false;
                 }
             }
-            else Console.WriteLine("Category not found.");
         }
 
-        void ICategoriesService.GetCategories(ref List<ItemCategory> categories)
+        bool ICategoriesService.GetCategories(ref List<ItemCategory> categories)
         {
             try
             {
@@ -93,11 +84,8 @@ namespace InventoryManagementSystem.Services.Categories
                     {
                         using (NpgsqlDataReader reader = command.ExecuteReader())
                         {
-                            if (!reader.HasRows)
-                            {
-                                Console.WriteLine("No categories until now");
-                                return;
-                            }
+                            if (!reader.HasRows) return false;
+
                             while (reader.Read())
                             {
                                 ItemCategory category = new ItemCategory
@@ -110,66 +98,48 @@ namespace InventoryManagementSystem.Services.Categories
                                     categories.Add(category);
                                 }
                             }
+                            return true;
                         }
-                    }
-                }
-
-                if (categories.Count > 0)
-                {
-                    foreach (var category in categories)
-                    {
-                        Console.WriteLine($"Name: {category.name}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
+                return false;
             }
         }
 
-        void ICategoriesService.UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories)
+        bool ICategoriesService.UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories)
         {
-            using (var connection = new NpgsqlConnection(_connectionsString))
+            if (categoryName == category.name)
+            {
+                Console.WriteLine("{0} is same as old value");
+                return false;
+            }
+            using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
             {
                 connection.Open();
 
-                using (var transaction = connection.BeginTransaction())
+                using (var command = new NpgsqlCommand())
                 {
-                    try
+                    command.Connection = connection;
+                    command.CommandText = "UPDATE categories SET category_name = @NewName " +
+                        "WHERE category_id = @CategoryID";
+                    command.Parameters.AddWithValue("NewName", categoryName);
+                    command.Parameters.AddWithValue("CategoryID", category.id);
+                    int rowsAffected = command.ExecuteNonQuery();
+                    if (rowsAffected > 0)
                     {
-                        // Update category name in the categories table
-                        using (var command = new NpgsqlCommand())
-                        {
-                            command.Connection = connection;
-                            command.CommandText = "UPDATE categories SET category_name = @NewName " +
-                                "WHERE category_id = @CategoryID";
-                            command.Parameters.AddWithValue("NewName", categoryName);
-                            command.Parameters.AddWithValue("CategoryID", category.id);
-                            int rowsAffected = command.ExecuteNonQuery();
-                            if (rowsAffected > 0)
-                            {
-                                Console.WriteLine("Categroy updated successfully");
-
-                                // Update the corresponding ItemCategory object in the list
-                                foreach (var _category in categories)
-                                {
-                                    if (_category.name.Equals(category.name, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        _category.name = categoryName;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        transaction.Commit();
+                        string oldName = category.name;
+                        ItemCategory categoryFound = categories.Find(cat => cat.name.Equals(oldName, StringComparison.OrdinalIgnoreCase));
+                        if (categoryFound != null ) categoryFound.name = categoryName;
+                        
+                        category.name = categoryName;
+                        return true;
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error updating category: " + ex.Message);
-                        transaction.Rollback();
-                    }
+                    else return false;
+
                 }
             }
 
