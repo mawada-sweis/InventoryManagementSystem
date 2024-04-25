@@ -19,34 +19,18 @@ namespace InventoryManagementSystem.Commands
 
         public void Execute(ref bool isAuthenticated, ref User user)
         {
-            user.userEmail = GetUserInput("Email: ");
-            user.userPassword = GetUserInput("Password: ");
-
             if (_authService.Login(user.userEmail, user.userPassword))
             {
                 Console.WriteLine("Login successful");
                 isAuthenticated = true;
-                GetUserInfo(ref user);
+                _authService.GetUserInfo(ref user);
             }
             else
             {
-                user.userEmail = String.Empty;
-                user.userPassword = String.Empty;
+                user = null;
                 Console.WriteLine("Login failed");
             }
         }
-
-        private string GetUserInput(string prompt)
-        {
-            Console.Write(prompt);
-            return Console.ReadLine().Trim();
-        }
-
-        private void GetUserInfo(ref User user)
-        {
-            _authService.GetUserInfo(ref user);
-        }
-
     }
 
     public class SignupCommand
@@ -60,29 +44,20 @@ namespace InventoryManagementSystem.Commands
 
         public void Execute(ref bool isAuthenticated, ref User user)
         {
-            user.userEmail = GetUserInput("Email: ");
-            user.userPassword = GetUserInput("Password: ");
+            user.userName = GetUserInput("Username: ");
+            user.userAddress = GetUserInput("Address: ");
+            user.userType = GetUserInput("Are you an Admin? Y/N: ").Equals('N') ? UserType.User : UserType.Admin;
 
-            if (!_authService.IsEmailExist(user.userEmail))
-            {
-                user.userName = GetUserInput("Username: ");
-                user.userAddress = GetUserInput("Address: ");
-                user.userType = GetUserInput("Are you an Admin? Y/N: ").Equals('N') ? UserType.User : UserType.Admin;
-
-                if (_authService.Register(user.userName, user.userEmail,
-                    user.userPassword, user.userAddress, user.userType) &
+            if (_authService.Register(user) &
                     _authService.Login(user.userEmail, user.userPassword))
-                {
-                    Console.WriteLine("Login Succesful");
-                    isAuthenticated = true;
-                }
+            {
+                Console.WriteLine("Login Succesful");
+                isAuthenticated = true;
+                _authService.GetUserInfo(ref user);
             }
             else
             {
-                user.userEmail = String.Empty;
-                user.userPassword = String.Empty;
-                user.userName = String.Empty;
-                user.userAddress = String.Empty;
+                user = null;
                 Console.WriteLine("Email is already exist!");
             }
         }
@@ -102,26 +77,14 @@ namespace InventoryManagementSystem.Commands
         {
             _authService = authService;
         }
-        public void Execute(ref bool isAuthenticated, ref User user)
+        public void Execute(ref User user)
         {
             string newPassword = GetUserInput("New password: ");
-            string resetResult = _authService.resetPassword(ref user, newPassword);
+            bool resetResult = _authService.resetPassword(ref user, newPassword);
 
-            switch (resetResult)
-            {
-                case "Success":
-                    Console.WriteLine("Password updated successfully");
-                    isAuthenticated = true;
-                    break;
+            if (resetResult) Console.WriteLine("Password updated successfully");
 
-                case "Same":
-                    Console.WriteLine("New password same as current one!");
-                    break;
-
-                case "":
-                    Console.WriteLine("Update password failed");
-                    break;
-            }
+            else Console.WriteLine("New password same as current one!");
         }
         private string GetUserInput(string prompt)
         {
@@ -141,7 +104,13 @@ namespace InventoryManagementSystem.Commands
         public void Execute(ref List<Item> items)
         {
             Item item = new Item();
-            item.name = GetUserInput("Item name: ");
+            string userInput = GetUserInput("Item name: ");
+            if (!items.Any(itemSearched => itemSearched.name == userInput))
+            {
+                Console.WriteLine("{0} item exist");
+                return;
+            }
+            item.name = userInput;
             item.description = GetUserInput("description: ");
             if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status))
                 item.status = status;
@@ -152,15 +121,10 @@ namespace InventoryManagementSystem.Commands
             item.quantity = int.Parse(GetUserInput("Quantity availible: "));
             item.sold = int.Parse(GetUserInput("Number of sold item: "));
             item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
-
-            if (_itemService.AddItem(
-                                item.name,
-                                item.description,
-                                item.price,
-                                item.status,
-                                item.quantity,
-                                item.minQuantity,
-                                item.sold)) items.Add(item);
+            item.id = Guid.NewGuid();
+            if (_itemService.AddItem(item, ref items))
+                Console.WriteLine($"{item.name} addedd successfully");
+            else Console.WriteLine($"{item.name} addedd faild");
 
         }
         private string GetUserInput(string prompt)
@@ -177,28 +141,9 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        public void Execute(ref List<Item> items, bool isDisplay = true)
+        public void Execute(ref List<Item> items)
         {
-            items = _itemService.GetItems(ref items);
-            if (isDisplay)
-            {
-                int count = 1;
-                foreach (Item item in items)
-                {
-                    Console.WriteLine("Item {0}:", count);
-                    Console.WriteLine("name: {0}", item.name);
-                    Console.WriteLine("description: {0}", item.description);
-                    Console.WriteLine("price: {0}", item.price);
-                    Console.WriteLine("status: {0}", item.status);
-                    Console.WriteLine("quantity: {0}", item.quantity);
-                    Console.WriteLine("sold: {0}", item.sold);
-                    Console.WriteLine("minimum quantity: {0}", item.minQuantity);
-                    if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
-                    else Console.WriteLine("category: NOT CATEGORIZED");
-                    Console.WriteLine("=================");
-                    count++;
-                }
-            }
+            _itemService.GetItems(ref items);
         }
     }
 
@@ -378,9 +323,10 @@ namespace InventoryManagementSystem.Commands
         {
             this._categoriesServic = categoriesService;
         }
-        public void Execute(ref List<ItemCategory> categories)
+        public void Execute(List<ItemCategory> categories)
         {
-            _categoriesServic.GetCategories(ref categories);
+            if (!_categoriesServic.GetCategories(ref categories))
+                Console.WriteLine("No categories until now");
         }
     }
 
@@ -394,7 +340,26 @@ namespace InventoryManagementSystem.Commands
         public void Execute(ref List<ItemCategory> categories)
         {
             string userInput = GetUserInput("What is name of Category? ");
-            _categoriesServic.AddCategory(userInput, ref categories);
+            if (userInput != null)
+            {
+                if (!categories.Any(category => category.name == userInput))
+                {
+                    ItemCategory newcategory = new ItemCategory
+                    {
+                        id = Guid.NewGuid(),
+                        name = userInput
+                    };
+                    if (_categoriesServic.AddCategory(newcategory, ref categories))
+                        Console.WriteLine($"Category '{userInput}' added successfully.");
+
+                    else Console.WriteLine($"Failed to add category '{userInput}'.");
+                }
+                else
+                {
+                    Console.WriteLine("{0} category name is exist.", userInput);
+                }
+            }
+            else Console.WriteLine("Category name must not be empty");
         }
         private string GetUserInput(string prompt)
         {
@@ -419,7 +384,9 @@ namespace InventoryManagementSystem.Commands
             if (category != null)
             {
                 userInput = GetUserInput("What is new name of category? ");
-                _categoriesServic.UpdateCategory(userInput, ref category, ref categories);
+                if (_categoriesServic.UpdateCategory(userInput, ref category, ref categories))
+                    Console.WriteLine("Categroy updated successfully");
+                else Console.WriteLine("Categroy not updated!");
             }
             else
             {
@@ -433,7 +400,7 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
-    
+
     public class DeleteCategoryCommand
     {
         private readonly ICategoriesService _categoriesServic;
@@ -445,10 +412,13 @@ namespace InventoryManagementSystem.Commands
         {
             string userInput = GetUserInput("What is name of category do you want to delete? ");
 
-            if (categories.FirstOrDefault(c => c.name.Equals(userInput,
-                StringComparison.OrdinalIgnoreCase)) != null)
+            ItemCategory categoryToDelete = categories.FirstOrDefault(category => category.name.Equals(userInput,
+                StringComparison.OrdinalIgnoreCase));
+            if (categoryToDelete != null)
             {
-                _categoriesServic.DeleteCategory(userInput, ref categories);
+                if (_categoriesServic.DeleteCategory(ref categoryToDelete, ref categories))
+                    Console.WriteLine("Category deleted successfully.");
+                else Console.WriteLine("Category not found in the database.");
             }
             else
             {

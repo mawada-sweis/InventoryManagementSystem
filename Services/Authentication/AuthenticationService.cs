@@ -40,59 +40,39 @@ namespace InventoryManagementSystem.Services.Authentication
             return (salt, Convert.ToBase64String(hashBytes));
         }
 
-        public bool IsEmailExist(string email)
+        public bool Login(string email, string password)
         {
-            bool isExist = false;
-            using (var conn = new NpgsqlConnection(this._connectionString))
-            {
-                conn.Open();
-                using (var cmd = new NpgsqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = "SELECT COUNT(*) FROM users WHERE user_email = @UserEmail";
-                    cmd.Parameters.AddWithValue("UserEmail", email);
-
-                    object result = cmd.ExecuteScalar();
-                    if (result != null) if (Convert.ToInt32(result) > 0) isExist = true;
-                }
-            }
-            return isExist;
-        }
-
-        public bool Login(string email, string password, bool reset = false)
-        {
-            if (!reset) if (IsEmailExist(email) == false) return false;
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var cmd = new NpgsqlCommand())
                 {
                     cmd.Connection = conn;
-
                     cmd.CommandText = "SELECT user_password, salt FROM users WHERE user_email = @UserEmail";
                     cmd.Parameters.AddWithValue("UserEmail", email);
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        if (reader.Read())
+                        if (reader.HasRows)
                         {
-                            string currentPassword = reader.GetString(0);
-                            string currentSalt = reader.GetString(1);
-
-                            (byte[] _salt, string computedHash) = HashPasword(password, currentSalt);
-
-
-                            return currentPassword == computedHash;
+                            if (reader.Read())
+                            {
+                                string currentPassword = reader.GetString(0);
+                                string currentSalt = reader.GetString(1);
+                                (byte[] _, string computedHash) = HashPasword(password, currentSalt);
+                                return currentPassword == computedHash;
+                            }
                         }
+                        else return false;
                     }
                 }
             }
             return false;
         }
 
-        public bool Register(string username, string email, string password, string address, UserType usertype = UserType.User)
+        public bool Register(User user)
         {
-            (byte[] hashSalt, string hashedPassword) = HashPasword(password);
+            (byte[] hashSalt, string hashedPassword) = HashPasword(user.userPassword);
 
             using (var conn = new NpgsqlConnection(this._connectionString))
             {
@@ -100,31 +80,39 @@ namespace InventoryManagementSystem.Services.Authentication
                 using (var cmd = new NpgsqlCommand())
                 {
                     cmd.Connection = conn;
-                    cmd.CommandText = "INSERT INTO users (user_id, user_email, user_username, user_password, user_address, user_type, salt) " +
-                        "VALUES (@UserID, @UserEmail, @UserName, @Password, @UserAddress, @UserType, @Salt)" +
-                        "ON CONFLICT (user_email) DO NOTHING";
+                    cmd.CommandText = @"
+                        INSERT INTO users (user_id, user_email, user_username, user_password, user_address, user_type, salt)
+                        SELECT @UserID, @UserEmail, @UserName, @Password, @UserAddress, @UserType, @Salt
+                        WHERE NOT EXISTS (SELECT 1 FROM users WHERE user_email = @UserEmail)
+                    ";
                     cmd.Parameters.AddWithValue("UserID", Guid.NewGuid());
-                    cmd.Parameters.AddWithValue("UserEmail", email);
-                    cmd.Parameters.AddWithValue("UserName", username);
+                    cmd.Parameters.AddWithValue("UserEmail", user.userEmail);
+                    cmd.Parameters.AddWithValue("UserName", user.userName);
                     cmd.Parameters.AddWithValue("Password", hashedPassword);
-                    cmd.Parameters.AddWithValue("UserAddress", address);
-                    cmd.Parameters.AddWithValue("UserType", usertype.ToString());
+                    cmd.Parameters.AddWithValue("UserAddress", user.userAddress);
+                    cmd.Parameters.AddWithValue("UserType", user.userType.ToString());
                     cmd.Parameters.AddWithValue("Salt", Convert.ToBase64String(hashSalt));
-                    cmd.ExecuteNonQuery();
-                    Console.WriteLine("Succefully added {0}", email);
+
+                    if (cmd.ExecuteNonQuery() == 1)
+                    {
+                        Console.WriteLine("Succefully added {0}", user.userEmail);
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Email {0} already exists", user.userEmail);
+                        return false;
+                    }
                 }
-                conn.Close();
             }
-            return true;
         }
 
-        public string resetPassword(ref User user, string newPassword)
+        public bool resetPassword(ref User user, string newPassword)
         {
-            if (Login(user.userEmail, newPassword, true)) return "Same";
-
-            (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword);
-
+            (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword, user.userSalt);
             string stringSalt = Convert.ToBase64String(hashSalt);
+            
+            if (user.userPassword == hashedPassword && user.userSalt == stringSalt) return false;
 
             using (var conn = new NpgsqlConnection(_connectionString))
             {
@@ -132,9 +120,10 @@ namespace InventoryManagementSystem.Services.Authentication
                 using (var cmd = new NpgsqlCommand())
                 {
                     cmd.Connection = conn;
-                    cmd.CommandText = "UPDATE users " +
-                        "SET user_password = @NewPassword, salt = @Salt " +
-                        "WHERE user_email = @UserEmail";
+                    cmd.CommandText = @"UPDATE users
+                        SET user_password = @NewPassword, salt = @Salt
+                        WHERE user_email = @UserEmail
+                    ";
                     cmd.Parameters.AddWithValue("NewPassword", hashedPassword);
                     cmd.Parameters.AddWithValue("UserEmail", user.userEmail);
                     cmd.Parameters.AddWithValue("Salt", stringSalt);
@@ -142,23 +131,21 @@ namespace InventoryManagementSystem.Services.Authentication
                     {
                         user.userPassword = hashedPassword;
                         user.userSalt = stringSalt;
-                        return "Success";
+                        return true;
                     }
+                    else return false;
                 }
             }
-            return "";
         }
 
         public void GetUserInfo(ref User user)
         {
-            if (IsEmailExist(user.userEmail) == false) return;
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var cmd = new NpgsqlCommand())
                 {
                     cmd.Connection = conn;
-
                     cmd.CommandText = "SELECT * FROM users WHERE user_email = @UserEmail";
                     cmd.Parameters.AddWithValue("UserEmail", user.userEmail);
 

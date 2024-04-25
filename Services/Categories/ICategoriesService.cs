@@ -5,9 +5,9 @@ namespace InventoryManagementSystem.Services.Categories
 {
     public interface ICategoriesService
     {
-        void GetCategories(ref List<ItemCategory> categories);
-        void AddCategory(string category, ref List<ItemCategory> categories);
-        void DeleteCategory(string categoryName, ref List<ItemCategory> categories);
-        void UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories);
+        bool GetCategories(ref List<ItemCategory> categories);
+        bool AddCategory(ItemCategory category, ref List<ItemCategory> categories);
+        bool DeleteCategory(ref ItemCategory categoryToDelete, ref List<ItemCategory> categories);
+        bool UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories);
     }
 }
