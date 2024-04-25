@@ -325,7 +325,8 @@ namespace InventoryManagementSystem.Commands
         }
         public void Execute(List<ItemCategory> categories)
         {
-            _categoriesServic.GetCategories(ref categories);
+            if (!_categoriesServic.GetCategories(ref categories))
+                Console.WriteLine("No categories until now");
         }
     }
 
@@ -343,7 +344,15 @@ namespace InventoryManagementSystem.Commands
             {
                 if (!categories.Any(category => category.name == userInput))
                 {
-                    _categoriesServic.AddCategory(userInput, ref categories);
+                    ItemCategory newcategory = new ItemCategory
+                    {
+                        id = Guid.NewGuid(),
+                        name = userInput
+                    };
+                    if (_categoriesServic.AddCategory(newcategory, ref categories))
+                        Console.WriteLine($"Category '{userInput}' added successfully.");
+
+                    else Console.WriteLine($"Failed to add category '{userInput}'.");
                 }
                 else
                 {
@@ -375,7 +384,9 @@ namespace InventoryManagementSystem.Commands
             if (category != null)
             {
                 userInput = GetUserInput("What is new name of category? ");
-                _categoriesServic.UpdateCategory(userInput, ref category, ref categories);
+                if (_categoriesServic.UpdateCategory(userInput, ref category, ref categories))
+                    Console.WriteLine("Categroy updated successfully");
+                else Console.WriteLine("Categroy not updated!");
             }
             else
             {
@@ -405,7 +416,9 @@ namespace InventoryManagementSystem.Commands
                 StringComparison.OrdinalIgnoreCase));
             if (categoryToDelete != null)
             {
-                _categoriesServic.DeleteCategory(ref categoryToDelete, ref categories);
+                if (_categoriesServic.DeleteCategory(ref categoryToDelete, ref categories))
+                    Console.WriteLine("Category deleted successfully.");
+                else Console.WriteLine("Category not found in the database.");
             }
             else
             {
