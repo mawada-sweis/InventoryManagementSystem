@@ -36,10 +36,10 @@ namespace InventoryManagementSystem.Models
 
     public class Order
     {
-        public int id { get; set; }
+        public Guid id { get; set; }
         public DateTime date { get; set; }
         public List<Item> items { get; set; }
-        public User user { get; set; }
+        public Guid userID { get; set; }
         public int total { get; set; }
         public OrderStatus status { get; set; }
     }
@@ -60,6 +60,13 @@ namespace InventoryManagementSystem.Models
 
     public enum OrderStatus
     {
-        foo
+        Pending,
+        Autherized,
+        Paid,
+        Shipping,
+        Completed,
+        Expired,
+        Canceled,
+        Unknown
     }
 }
