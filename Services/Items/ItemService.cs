@@ -16,8 +16,8 @@ namespace InventoryManagementSystem.Services.Items
         public bool AddItem(Item newItem, ref List<Item> items)
         {
             string query = @"INSERT INTO items (item_id, item_name, item_description, item_price, item_status,
-                item_quantity_available, item_sold, item_min_quantity, category_id)
-                VALUES (@id, @name, @description, @price, @status, @quantityAvailable, @sold, @minQuantity, @category)
+                item_quantity, item_sold, item_min_quantity, category_id, item_stock)
+                VALUES (@id, @name, @description, @price, @status, @quantity, @sold, @minQuantity, @category, @stock)
                 ON CONFLICT (item_name) DO NOTHING";
             using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
             {
@@ -31,10 +31,11 @@ namespace InventoryManagementSystem.Services.Items
                     command.Parameters.AddWithValue("@description", newItem.description);
                     command.Parameters.AddWithValue("@price", newItem.price);
                     command.Parameters.AddWithValue("@status", newItem.status.ToString());
-                    command.Parameters.AddWithValue("@quantityAvailable", newItem.quantity);
+                    command.Parameters.AddWithValue("@quantity", newItem.quantity);
                     command.Parameters.AddWithValue("@sold", newItem.sold);
                     command.Parameters.AddWithValue("@minQuantity", newItem.minQuantity);
                     command.Parameters.AddWithValue("@category", newItem.category.id);
+                    command.Parameters.AddWithValue("@stock", newItem.stock);
 
                     if (command.ExecuteNonQuery() > 0)
                     {
@@ -114,9 +115,10 @@ namespace InventoryManagementSystem.Services.Items
                                     description = reader.GetString(reader.GetOrdinal("item_description")),
                                     price = reader.GetInt32(reader.GetOrdinal("item_price")),
                                     status = status,
-                                    quantity = reader.GetInt32(reader.GetOrdinal("item_quantity_available")),
+                                    quantity = reader.GetInt32(reader.GetOrdinal("item_quantity")),
                                     sold = reader.GetInt32(reader.GetOrdinal("item_sold")),
                                     minQuantity = reader.GetInt32(reader.GetOrdinal("item_min_quantity")),
+                                    stock = reader.GetInt32(reader.GetOrdinal("item_stock"))
                                 };
                                 if (!items.Exists(i => i.id == item.id))
                                 {
@@ -135,60 +137,66 @@ namespace InventoryManagementSystem.Services.Items
 
         public bool UpdateItem(ref Item item, Item newItem)
         {
-            try
+            if (newItem.name != item.name ||
+                newItem.description != item.description ||
+                newItem.price != item.price ||
+                newItem.minQuantity != item.minQuantity ||
+                newItem.category != item.category)
             {
-                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                try
                 {
-                    connection.Open();
-
-                    string query = "UPDATE items SET " +
-                                   "item_name = @Name, " +
-                                   "item_description = @Description, " +
-                                   "item_price = @Price, " +
-                                   "item_status = @Status, " +
-                                   "item_quantity_available = @QuantityAvailable, " +
-                                   "item_sold = @Sold, " +
-                                   "item_min_quantity = @MinQuantity, " +
-                                   "category_id = @CategoryID " +
-                                   "WHERE item_id = @ID " +
-                                   "AND (item_name <> @Name " +
-                                   "OR item_description <> @Description " +
-                                   "OR item_price <> @Price " +
-                                   "OR item_status <> @Status " +
-                                   "OR item_quantity_available <> @QuantityAvailable " +
-                                   "OR item_sold <> @Sold " +
-                                   "OR item_min_quantity <> @MinQuantity " +
-                                   "OR category_id <> @CategoryID)";
-
-                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
                     {
-                        command.Parameters.AddWithValue("@Name", newItem.name);
-                        command.Parameters.AddWithValue("@Description", newItem.description);
-                        command.Parameters.AddWithValue("@Price", newItem.price);
-                        command.Parameters.AddWithValue("@Status", newItem.status.ToString());
-                        command.Parameters.AddWithValue("@QuantityAvailable", newItem.quantity);
-                        command.Parameters.AddWithValue("@Sold", newItem.sold);
-                        command.Parameters.AddWithValue("@MinQuantity", newItem.minQuantity);
-                        command.Parameters.AddWithValue("@CategoryID", newItem.category.id);
-                        command.Parameters.AddWithValue("@ID", item.id);
+                        connection.Open();
 
-                        int rowsAffected = command.ExecuteNonQuery();
+                        string query = "UPDATE items SET " +
+                                       "item_name = @Name, " +
+                                       "item_description = @Description, " +
+                                       "item_price = @Price, " +
+                                       "item_status = @Status, " +
+                                       "item_quantity = @Quantity, " +
+                                       "item_sold = @Sold, " +
+                                       "item_min_quantity = @MinQuantity, " +
+                                       "category_id = @CategoryID, " +
+                                       "item_stock = @Stock " +
+                                       "WHERE item_id = @ID";
 
-                        if (rowsAffected > 0)
+                        using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                         {
-                            item = newItem;
-                            return true;
-                        }
-                        else
-                        {
-                            return false;
+                            command.Parameters.AddWithValue("@Name", newItem.name);
+                            command.Parameters.AddWithValue("@Description", newItem.description);
+                            command.Parameters.AddWithValue("@Price", newItem.price);
+                            command.Parameters.AddWithValue("@Status", newItem.status.ToString());
+                            command.Parameters.AddWithValue("@Quantity", newItem.quantity);
+                            command.Parameters.AddWithValue("@Sold", newItem.sold);
+                            command.Parameters.AddWithValue("@MinQuantity", newItem.minQuantity);
+                            command.Parameters.AddWithValue("@CategoryID", newItem.category.id);
+                            command.Parameters.AddWithValue("@Stock", newItem.stock);
+                            command.Parameters.AddWithValue("@ID", item.id);
+
+                            int rowsAffected = command.ExecuteNonQuery();
+
+                            if (rowsAffected > 0)
+                            {
+                                item = newItem;
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred while updating the item: " + ex.Message);
+                    return false;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine("An error occurred while updating the item: " + ex.Message);
+                Console.WriteLine("There updated value is same as current values!");
                 return false;
             }
         }
@@ -203,7 +211,7 @@ namespace InventoryManagementSystem.Services.Items
             }
             if (itemSearch.quantity == newQuantity)
             {
-                Console.WriteLine("quantity not updated!");
+                Console.WriteLine("quantity same as now!");
                 return false;
             }
             if (newQuantity < itemSearch.minQuantity)
@@ -217,11 +225,17 @@ namespace InventoryManagementSystem.Services.Items
                 {
                     connection.Open();
 
-                    string query = "UPDATE items SET item_quantity_available = @NewQuantity WHERE item_id = @ItemID";
+                    string query = "UPDATE items " +
+                        "SET item_quantity = @NewQuantity, " +
+                        "item_sold = @SoldValue, " +
+                        "item_stock = @NewQuantity " +
+                        "WHERE item_id = @ItemID";
                     using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("ItemID", guid);
-                        command.Parameters.AddWithValue("NewQuantity", newQuantity);
+                        command.Parameters.AddWithValue("@ItemID", guid);
+                        command.Parameters.AddWithValue("@NewQuantity", newQuantity);
+                        command.Parameters.AddWithValue("@SoldValue", 0);
+
                         int rowsAffected = command.ExecuteNonQuery();
 
                         if (rowsAffected > 0)

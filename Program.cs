@@ -23,13 +23,10 @@ namespace InventoryManagementSystem
 
             public static readonly Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
-            public static Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
-
-
         }
         private static string ReadPassword()
         {
@@ -99,6 +96,7 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(Globals.itemService, Globals.categoriesService);
+            Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(Globals.itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(Globals.itemService);
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(Globals.categoriesService);
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(Globals.categoriesService);
@@ -153,6 +151,7 @@ namespace InventoryManagementSystem
                             Console.WriteLine("quantity: {0}", item.quantity);
                             Console.WriteLine("sold: {0}", item.sold);
                             Console.WriteLine("minimum quantity: {0}", item.minQuantity);
+                            Console.WriteLine("quantity in stock: {0}", item.stock);
                             if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
                             else Console.WriteLine("category: NOT CATEGORIZED");
                             Console.WriteLine("=================");
@@ -160,7 +159,7 @@ namespace InventoryManagementSystem
                         }
                         break;
                     case "updateitem":
-                        Globals.updateItemCommand.Execute(ref Items, ref Categories);
+                        updateItemCommand.Execute(ref Items, ref Categories);
                         break;
                     case "deleteitem":
                         deleteItemCommand.Execute(ref Items);

@@ -115,10 +115,6 @@ namespace InventoryManagementSystem.Commands
             }
             item.name = userInput;
             item.description = GetUserInput("description: ");
-            if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status))
-                item.status = status;
-
-            else item.status = ItemStatus.InStock;
 
             string[] label = { "price", "quantity", "sold", "minQuantity" };
 
@@ -133,6 +129,14 @@ namespace InventoryManagementSystem.Commands
                 PropertyInfo propertyInfo = item.GetType().GetProperty(label[i]);
                 propertyInfo.SetValue(item, temp);
             }
+
+            item.stock = item.quantity - item.sold;
+
+            if (item.stock == 0) item.status = ItemStatus.OutOfStock;
+
+            else if (item.stock < item.minQuantity) item.status = ItemStatus.LowStock;
+
+            else item.status = ItemStatus.InStock;
 
             List<ItemCategory> categories = new List<ItemCategory>();
             _categoriesService.GetCategories(ref categories);
@@ -208,6 +212,11 @@ namespace InventoryManagementSystem.Commands
                 Item updatedItem = new Item();
 
                 updatedItem.id = itemToUpdate.id;
+                updatedItem.quantity = itemToUpdate.quantity;
+                updatedItem.status = itemToUpdate.status;
+                updatedItem.sold = itemToUpdate.sold;
+                updatedItem.stock = itemToUpdate.stock;
+
                 string userInput =
                     GetUserInput("Do you want to update the name of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.name = GetUserInput("Enter the new name:");
@@ -222,33 +231,6 @@ namespace InventoryManagementSystem.Commands
                     GetUserInput("Do you want to update the price of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.price = int.Parse(GetUserInput("Enter the new price:"));
                 else updatedItem.price = itemToUpdate.price;
-
-                userInput =
-                    GetUserInput("Do you want to update the status of the item? (Y/N)").ToUpper();
-                if (userInput == "Y")
-                {
-                    userInput = GetUserInput("Enter the new status:");
-                    switch (userInput)
-                    {
-                        case "InStock":
-                            updatedItem.status = ItemStatus.InStock;
-                            break;
-                        case "LowStock":
-                            updatedItem.status = ItemStatus.LowStock;
-                            break;
-                        case "OutOfStock":
-                            updatedItem.status = ItemStatus.OutOfStock;
-                            break;
-                        case "Unknown":
-                            updatedItem.status = ItemStatus.Unknown;
-                            break;
-                    }
-                }
-                else updatedItem.status = itemToUpdate.status;
-
-                updatedItem.quantity = itemToUpdate.quantity;
-
-                updatedItem.sold = itemToUpdate.sold;
 
                 userInput =
                     GetUserInput("Do you want to update the minimum quantity of the item? (Y/N)").ToUpper();
@@ -281,7 +263,6 @@ namespace InventoryManagementSystem.Commands
                 if (itemToUpdate.name != updatedItem.name ||
                 itemToUpdate.description != updatedItem.description ||
                 itemToUpdate.price != updatedItem.price ||
-                itemToUpdate.status != updatedItem.status ||
                 itemToUpdate.minQuantity != updatedItem.minQuantity ||
                 itemToUpdate.category != updatedItem.category)
                 {

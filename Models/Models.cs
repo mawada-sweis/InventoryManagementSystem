@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace InventoryManagementSystem.Models
 {
@@ -23,6 +22,7 @@ namespace InventoryManagementSystem.Models
         public int minQuantity { get; set; }
         public int quantity { get; set; }
         public ItemCategory category { get; set; }
+        public int stock { get; set; }
 
     }
 
@@ -35,18 +35,8 @@ namespace InventoryManagementSystem.Models
         public string userAddress { get; set; }
         public string userSalt { get; set; }
         public UserType userType { get; set; }
-        public List<Order> orders { get; set; }
     }
 
-    public class Order
-    {
-        public int id { get; set; }
-        public DateTime date { get; set; }
-        public List<Item> items { get; set; }
-        public User user { get; set; }
-        public int total { get; set; }
-        public OrderStatus status { get; set; }
-    }
 
     public enum UserType
     {
@@ -60,10 +50,5 @@ namespace InventoryManagementSystem.Models
         OutOfStock,
         LowStock,
         Unknown
-    }
-
-    public enum OrderStatus
-    {
-        foo
     }
 }

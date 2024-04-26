@@ -22,9 +22,10 @@ namespace InventoryManagementSystem.TestProject
             description = "this will test if the system add item correctly.",
             price = 20,
             status = ItemStatus.InStock,
-            sold = 1,
-            minQuantity = 0,
-            quantity = 0
+            sold = 0,
+            minQuantity = 1,
+            quantity = 2,
+            stock = 2
         };
 
         List<ItemCategory> categories = new List<ItemCategory>();
