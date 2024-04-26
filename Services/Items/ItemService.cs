@@ -193,5 +193,52 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        public bool UpdateQuantity(ref List<Item> items, Guid guid, int newQuantity)
+        {
+            var itemSearch = items.Find(item => item.id == guid);
+            if (itemSearch == null)
+            {
+                Console.WriteLine("item not found!");
+                return false;
+            }
+            if (itemSearch.quantity == newQuantity)
+            {
+                Console.WriteLine("quantity not updated!");
+                return false;
+            }
+            if (newQuantity < itemSearch.minQuantity)
+            {
+                Console.WriteLine("quantity must be at least {0}", itemSearch.minQuantity);
+                return false;
+            }
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string query = "UPDATE items SET item_quantity_available = @NewQuantity WHERE item_id = @ItemID";
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("ItemID", guid);
+                        command.Parameters.AddWithValue("NewQuantity", newQuantity);
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            itemSearch.quantity = newQuantity;
+                            return true;
+                        }
+                        else return false;
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

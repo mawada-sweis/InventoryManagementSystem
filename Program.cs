@@ -98,11 +98,12 @@ namespace InventoryManagementSystem
         {
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
-            Commands.AddItemCommand addItemCommand = new AddItemCommand(Globals.itemService);
+            Commands.AddItemCommand addItemCommand = new AddItemCommand(Globals.itemService, Globals.categoriesService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(Globals.itemService);
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(Globals.categoriesService);
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(Globals.categoriesService);
             Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(Globals.categoriesService);
+            Commands.UpdateQuntityItemCommand updateQuntityItemCommand = new UpdateQuntityItemCommand(Globals.itemService);
 
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
@@ -125,6 +126,7 @@ namespace InventoryManagementSystem
                             "Display All Items => DisplayItems\n" +
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n" +
+                            "Update Quantity of specific item => UpdateQuantity\n" +
                             "Display All Categories => DisplayCategories\n" +
                             "Add New Item Category => AddCategory\n" +
                             "Update Category by Name => UpdateCategory\n" +
@@ -162,6 +164,9 @@ namespace InventoryManagementSystem
                         break;
                     case "deleteitem":
                         deleteItemCommand.Execute(ref Items);
+                        break;
+                    case "updatequantity":
+                        updateQuntityItemCommand.Execute(ref Items);
                         break;
                     case "displaycategories":
                         if (Categories.Count == 0)

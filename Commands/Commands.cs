@@ -5,6 +5,7 @@ using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -97,17 +98,19 @@ namespace InventoryManagementSystem.Commands
     public class AddItemCommand
     {
         private readonly IItemService _itemService;
-        public AddItemCommand(IItemService itemService)
+        private readonly ICategoriesService _categoriesService;
+        public AddItemCommand(IItemService itemService, ICategoriesService categoriesService)
         {
             _itemService = itemService;
+            _categoriesService = categoriesService;
         }
         public void Execute(ref List<Item> items)
         {
             Item item = new Item();
             string userInput = GetUserInput("Item name: ");
-            if (!items.Any(itemSearched => itemSearched.name == userInput))
+            if (items.Any(itemSearched => itemSearched.name == userInput))
             {
-                Console.WriteLine("{0} item exist");
+                Console.WriteLine("{0} item exist", userInput);
                 return;
             }
             item.name = userInput;
@@ -117,10 +120,37 @@ namespace InventoryManagementSystem.Commands
 
             else item.status = ItemStatus.InStock;
 
-            item.price = int.Parse(GetUserInput("price: "));
-            item.quantity = int.Parse(GetUserInput("Quantity availible: "));
-            item.sold = int.Parse(GetUserInput("Number of sold item: "));
-            item.minQuantity = int.Parse(GetUserInput("Minimum quantity should have in stock: "));
+            string[] label = { "price", "quantity", "sold", "minQuantity" };
+
+            for (int i = 0; i < label.Length; i++)
+            {
+                int temp = int.Parse(GetUserInput($"{label[i]}: "));
+                while (temp < 0)
+                {
+                    Console.WriteLine($"{label[i]} must be greater than 0. Please enter correct value");
+                    temp = int.Parse(GetUserInput($"{label[i]}: "));
+                }
+                PropertyInfo propertyInfo = item.GetType().GetProperty(label[i]);
+                propertyInfo.SetValue(item, temp);
+            }
+
+            List<ItemCategory> categories = new List<ItemCategory>();
+            _categoriesService.GetCategories(ref categories);
+            var categoryStrings = categories.Select(category => category.ToString()).ToList();
+            string categoriesString = string.Join(", ", categoryStrings);
+
+            bool isExist = false;
+            ItemCategory categorySearched = new ItemCategory();
+            while (!isExist)
+            {
+                userInput = GetUserInput($"choose category: {categoriesString}: ");
+                categorySearched = categories.Find(tempCategory => tempCategory.name == userInput);
+                if (categorySearched != null) isExist = true;
+                else Console.WriteLine("{0} category is not exist", userInput);
+            }
+
+            item.category = new ItemCategory { id = categorySearched.id, name = userInput };
+
             item.id = Guid.NewGuid();
             if (_itemService.AddItem(item, ref items))
                 Console.WriteLine($"{item.name} addedd successfully");
@@ -216,15 +246,9 @@ namespace InventoryManagementSystem.Commands
                 }
                 else updatedItem.status = itemToUpdate.status;
 
-                userInput =
-                    GetUserInput("Do you want to update the quantity of the item? (Y/N)").ToUpper();
-                if (userInput == "Y") updatedItem.quantity = int.Parse(GetUserInput("Enter the new quantity:"));
-                else updatedItem.quantity = itemToUpdate.quantity;
+                updatedItem.quantity = itemToUpdate.quantity;
 
-                userInput =
-                    GetUserInput("Do you want to update the number of sold items? (Y/N)").ToUpper();
-                if (userInput == "Y") updatedItem.sold = int.Parse(GetUserInput("Enter the new number:"));
-                else updatedItem.sold = itemToUpdate.sold;
+                updatedItem.sold = itemToUpdate.sold;
 
                 userInput =
                     GetUserInput("Do you want to update the minimum quantity of the item? (Y/N)").ToUpper();
@@ -258,8 +282,6 @@ namespace InventoryManagementSystem.Commands
                 itemToUpdate.description != updatedItem.description ||
                 itemToUpdate.price != updatedItem.price ||
                 itemToUpdate.status != updatedItem.status ||
-                itemToUpdate.quantity != updatedItem.quantity ||
-                itemToUpdate.sold != updatedItem.sold ||
                 itemToUpdate.minQuantity != updatedItem.minQuantity ||
                 itemToUpdate.category != updatedItem.category)
                 {
@@ -433,4 +455,42 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    public class UpdateQuntityItemCommand
+    {
+        private readonly IItemService _itemService;
+        public UpdateQuntityItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> items)
+        {
+            try
+            {
+                string itemName = GetUserInput("Enter the name of the item you want to update:");
+
+                Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
+                if (itemToUpdate != null)
+                {
+                    int itemQuantity = Int32.Parse(GetUserInput("Enter the new quantity of the item:"));
+                    if (_itemService.UpdateQuantity(ref items, itemToUpdate.id, itemQuantity))
+                    {
+                        Console.WriteLine("Updated successfully!");
+                        return;
+                    }
+                }
+                else Console.WriteLine($"Item with name '{itemName}' not found.");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
 }
