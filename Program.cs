@@ -12,24 +12,37 @@ namespace InventoryManagementSystem
 {
     internal class Program
     {
+        /// <summary>
+        /// Provides global access to shared resources and services used throughout the program.
+        /// </summary>
         public static class Globals
         {
+            // Connection String for database access
             static readonly string connectionStringTemplate = ConfigurationManager.AppSettings["ConnectionString"];
+            // Gets the connection string used for database access
             public static readonly string ConnectionString = connectionStringTemplate.Replace("%PG_PASSWORD%", Environment.GetEnvironmentVariable("PG_PASSWORD"));
 
+            // Initializing services instance
             public static readonly IAuthService authentication = new AuthenticationService(ConnectionString);
             public static readonly IItemService itemService = new ItemService(ConnectionString);
             public static readonly ICategoriesService categoriesService = new CategoriesService(ConnectionString);
 
+            // Initializing Commands
             public static readonly Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
             public static Commands.SearchItemByNameCommand searchItemByNameCommand = new SearchItemByNameCommand(itemService);
             public static Commands.FilterItemsByCriteriaCommand filterItemsByCriteriaCommand = new FilterItemsByCriteriaCommand(itemService);
 
+            // Initializing lists needed
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
         }
+
+        /// <summary>
+        /// Reads a password from the console input without echoing characters
+        /// </summary>
+        /// <returns>The password entered by the user</returns>
         private static string ReadPassword()
         {
             string password = "";
@@ -41,6 +54,7 @@ namespace InventoryManagementSystem
                 {
                     if (key.Key == ConsoleKey.Backspace && password.Length > 0)
                     {
+                        // Erase the character from console output
                         password = password.Substring(0, password.Length - 1);
                         Console.Write("\b \b");
                     }
@@ -55,25 +69,42 @@ namespace InventoryManagementSystem
             Console.WriteLine();
             return password;
         }
+
+        /// <summary>
+        /// Reads a command from the console input, optionally with a specified route
+        /// </summary>
+        /// <param name="rout">Optional. The route to append to the command prompt</param>
+        /// <returns>The command entered by the user, trimmed and converted to lowercase.</returns>
         static string GetUserInput([Optional] string rout)
         {
             Console.Write("Write a command: \\api\\{0}", rout);
             return Console.ReadLine().Trim().ToLower();
         }
-        static void PrintFilteredItems(List<Item> FilteredItems, List<ItemCategory> Categories)
+
+        /// <summary>
+        /// Prints the items along with their details to the console
+        /// </summary>
+        /// <param name="items">The list of items to print</param>
+        /// <param name="Categories">Optional. The list of item categories used to populate category names</param>
+        static void PrintItems(List<Item> items, [Optional] List<ItemCategory> Categories)
         {
-            foreach (Item item in FilteredItems)
-            {
-                item.category.name = Categories.Find(cat => cat.id == item.category.id).name;
-            }
-            if (FilteredItems.Count == 0)
+            // If no items match the filter criteria, then return without printing items
+            if (items.Count == 0)
             {
                 Console.WriteLine("The critiria is not match any item!");
                 return;
             }
+            if (Categories != null)
+            {
+                foreach (Item item in items)
+                {
+                    // Populate the category name for each item
+                    item.category.name = Categories.Find(cat => cat.id == item.category.id).name;
+                }
+            }
             Console.WriteLine("Items:");
             int count = 1;
-            foreach (Item item in FilteredItems)
+            foreach (Item item in items)
             {
                 Console.WriteLine("Item {0}:", count);
                 Console.WriteLine("name: {0}", item.name);
@@ -84,28 +115,42 @@ namespace InventoryManagementSystem
                 Console.WriteLine("sold: {0}", item.sold);
                 Console.WriteLine("minimum quantity: {0}", item.minQuantity);
                 Console.WriteLine("quantity in stock: {0}", item.stock);
+                // Check if the category is not null before printing its name
                 if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
                 else Console.WriteLine("category: NOT CATEGORIZED");
                 Console.WriteLine("=================");
                 count++;
             }
         }
+
+        /// <summary>
+        /// Displays the user menu and handles user interactions
+        /// </summary>
+        /// <param name="user">Reference to the current user</param>
         static void UserMenu(ref User user)
         {
+            // Clear the console screen and display a welcome message
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
 
+            // Retrieve categories and items from global variables
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
 
+            // Construct the home route based on the user's username
             string homeRout = $"{user.userName}\\home\\";
+
+            // Get the user input initially
             string userInput = GetUserInput(homeRout);
 
+            // Loop indefinitely until the user chooses to logout
             while (true)
             {
+                // Execute commands to update categories and items
                 Globals.getCategoriesCommand.Execute(Categories);
                 Globals.getItemsCommand.Execute(ref Items);
 
+                // Handle user input using a switch statement
                 switch (userInput)
                 {
                     case "reset-password":
@@ -120,13 +165,22 @@ namespace InventoryManagementSystem
                         return;
                 }
 
+                // Get the next user input
                 userInput = GetUserInput(homeRout);
             }
         }
+
+        /// <summary>
+        /// Displays the admin menu and handles admin interactions
+        /// </summary>
+        /// <param name="user">Reference to the current user</param>
         static void AdminMenu(ref User user)
         {
+            // Clear the console screen and display a welcome message
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
+
+            // Initialize command instances for various admin operations
             Commands.AddItemCommand addItemCommand = new AddItemCommand(Globals.itemService, Globals.categoriesService);
             Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(Globals.itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(Globals.itemService);
@@ -136,14 +190,21 @@ namespace InventoryManagementSystem
             Commands.UpdateQuntityItemCommand updateQuntityItemCommand = new UpdateQuntityItemCommand(Globals.itemService);
             Commands.UpdateSoldItemCommand updateSoldItemCommand = new UpdateSoldItemCommand(Globals.itemService);
 
+            // Retrieve categories and items from global variables
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
             List<Item> FilteredItems = new List<Item>();
 
+            // Construct the home route based on the user's username
             string homeRout = $"{user.userName}\\admin\\home\\";
+
+            // Get the user input initially
             string userInput = GetUserInput(homeRout);
+
+            // Loop indefinitely until the admin chooses to logout
             while (true)
             {
+                // Execute commands to update categories and items
                 Globals.getCategoriesCommand.Execute(Categories);
                 Globals.getItemsCommand.Execute(ref Items);
 
@@ -177,29 +238,7 @@ namespace InventoryManagementSystem
                         addItemCommand.Execute(ref Items);
                         break;
                     case "displayitems":
-                        if (Items.Count == 0)
-                        {
-                            Console.WriteLine("There is no items yet");
-                            break;
-                        }
-                        Console.WriteLine("Items:");
-                        int count = 1;
-                        foreach (Item item in Items)
-                        {
-                            Console.WriteLine("Item {0}:", count);
-                            Console.WriteLine("name: {0}", item.name);
-                            Console.WriteLine("description: {0}", item.description);
-                            Console.WriteLine("price: {0}", item.price);
-                            Console.WriteLine("status: {0}", item.status);
-                            Console.WriteLine("quantity: {0}", item.quantity);
-                            Console.WriteLine("sold: {0}", item.sold);
-                            Console.WriteLine("minimum quantity: {0}", item.minQuantity);
-                            Console.WriteLine("quantity in stock: {0}", item.stock);
-                            if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
-                            else Console.WriteLine("category: NOT CATEGORIZED");
-                            Console.WriteLine("=================");
-                            count++;
-                        }
+                        PrintItems(Items);
                         break;
                     case "updateitem":
                         updateItemCommand.Execute(ref Items, ref Categories);
@@ -256,21 +295,21 @@ namespace InventoryManagementSystem
                         break;
                     case "filterstatus":
                         Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "status");
-                        PrintFilteredItems(FilteredItems, Categories);
+                        PrintItems(FilteredItems, Categories);
                         break;
                     case "filtercategory":
                         Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "category");
-                        PrintFilteredItems(FilteredItems, Categories);
+                        PrintItems(FilteredItems, Categories);
                         break;
                     case "filterprice":
                         userInput = GetUserInput("What is the operator criteria? ");
                         Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "price", userInput);
-                        PrintFilteredItems(FilteredItems, Categories);
+                        PrintItems(FilteredItems, Categories);
                         break;
                     case "filterstock":
                         userInput = GetUserInput("What is the operator criteria? ");
                         Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "stock", userInput);
-                        PrintFilteredItems(FilteredItems, Categories);
+                        PrintItems(FilteredItems, Categories);
                         break;
                     case "logout":
                         return;
@@ -278,15 +317,20 @@ namespace InventoryManagementSystem
                 userInput = GetUserInput(homeRout);
             }
         }
+
         static void Main(string[] args)
         {
+            // Flag indicating whether the user is authenticated
             bool isAuthenticated = false;
 
+            // Create a new user instance
             User user = new User();
 
+            // Initialize command instances for login and signup
             Commands.LoginCommand loginCommand = new LoginCommand(Globals.authentication);
             Commands.SignupCommand signupCommand = new SignupCommand(Globals.authentication);
 
+            // Prompt the user to enter email and password
             Console.Write("Enter email:");
             user.userEmail = Console.ReadLine().Trim().ToLower();
 
@@ -304,6 +348,7 @@ namespace InventoryManagementSystem
                     break;
             }
 
+            // If the user is authenticated, proceed to the appropriate menu
             if (isAuthenticated)
             {
                 switch (user.userType)
