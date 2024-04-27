@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -539,14 +540,14 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
-    public class FilterItemsByStatusCommand
+    public class FilterItemsByCriteriaCommand
     {
         private readonly IItemService _itemService;
-        public FilterItemsByStatusCommand(IItemService itemService)
+        public FilterItemsByCriteriaCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
-        public void Execute(ref List<Item> itemsFiltered, string criteria)
+        public void Execute(ref List<Item> itemsFiltered, string criteria, [Optional] string operatorString)
         {
             itemsFiltered.Clear();
             string userInput = GetUserInput("What is the criteria value?");
@@ -558,7 +559,7 @@ namespace InventoryManagementSystem.Commands
                     userInput = "Unknown";
                 }
             }
-            itemsFiltered = _itemService.GetFilterItems(criteria, userInput);
+            itemsFiltered = _itemService.GetFilterItems(criteria, userInput, operatorString);
         }
         private string GetUserInput(string prompt)
         {

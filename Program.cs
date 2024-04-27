@@ -6,7 +6,6 @@ using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Diagnostics.Metrics;
 using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem
@@ -26,7 +25,7 @@ namespace InventoryManagementSystem
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
             public static Commands.SearchItemByNameCommand searchItemByNameCommand = new SearchItemByNameCommand(itemService);
-            public static Commands.FilterItemsByStatusCommand filterItemsByStatusCommand = new FilterItemsByStatusCommand(itemService);
+            public static Commands.FilterItemsByCriteriaCommand filterItemsByCriteriaCommand = new FilterItemsByCriteriaCommand(itemService);
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
@@ -170,7 +169,9 @@ namespace InventoryManagementSystem
                             "=========================================================\n" +
                             "Search item by name => SearchItem\n" +
                             "Filter items by status => FilterStatus\n" +
-                            "Filter items by category => FilterCategory\n");
+                            "Filter items by category => FilterCategory\n" +
+                            "Filter items by price => FilterPrice\n" +
+                            "Filter items by stock => FilterStock\n");
                         break;
                     case "additem":
                         addItemCommand.Execute(ref Items);
@@ -254,11 +255,21 @@ namespace InventoryManagementSystem
                         }
                         break;
                     case "filterstatus":
-                        Globals.filterItemsByStatusCommand.Execute(ref FilteredItems, "status");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "status");
                         PrintFilteredItems(FilteredItems, Categories);
                         break;
                     case "filtercategory":
-                        Globals.filterItemsByStatusCommand.Execute(ref FilteredItems, "category");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "category");
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filterprice":
+                        userInput = GetUserInput("What is the operator criteria? ");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "price", userInput);
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filterstock":
+                        userInput = GetUserInput("What is the operator criteria? ");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "stock", userInput);
                         PrintFilteredItems(FilteredItems, Categories);
                         break;
                     case "logout":

@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Services.Items
 {
@@ -363,8 +364,13 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
-        public List<Item> GetFilterItems(string criteria, string creteriaValue)
+        public List<Item> GetFilterItems(string criteria, string creteriaValue, [Optional] string operatorString)
         {
+            if (operatorString != null)
+            {
+                List<string> validOperators = new List<string> { "<", ">", "<=", ">=", "==", "!=" };
+                if (!validOperators.Contains(operatorString)) return null;
+            }
             List<Item> items = new List<Item>();
             string query;
 
@@ -379,6 +385,14 @@ namespace InventoryManagementSystem.Services.Items
                     "JOIN categories ON items.category_id = categories.category_id " +
                     "WHERE categories.category_name = @CreteriaValue;";
             }
+            else if (criteria == "price")
+            {
+                query = $"SELECT * FROM items WHERE item_price {operatorString} @CreteriaValue";
+            }
+            else if (criteria == "stock")
+            {
+                query = $"SELECT * FROM items WHERE item_stock {operatorString} @CreteriaValue";
+            }
             else return null;
 
             try
@@ -388,7 +402,10 @@ namespace InventoryManagementSystem.Services.Items
                     connection.Open();
                     using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@CreteriaValue", creteriaValue);
+                        if (criteria == "price" || criteria == "stock")
+                            command.Parameters.AddWithValue("@CreteriaValue", int.Parse(creteriaValue));
+                        else command.Parameters.AddWithValue("@CreteriaValue", creteriaValue);
+
                         using (NpgsqlDataReader reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -430,11 +447,6 @@ namespace InventoryManagementSystem.Services.Items
                 Console.WriteLine(ex.ToString());
                 return null;
             }
-        }
-
-        public List<Item> GetFilterItems(string creteria, int creteriaValue)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -100,14 +100,14 @@ namespace InventoryManagementSystem.TestProject
             Assert.That(_itemService.UpdateItem(ref item, item), Is.EqualTo(false));
         }
 
-        [Test, Order(16)]
+        [Test, Order(20)]
         public void TestDeleteItem_valid()
         {
             item = items.FirstOrDefault(item => item.name == "Test update item");
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(true));
         }
 
-        [Test, Order(17)]
+        [Test, Order(21)]
         public void TestDeleteItem_invalid()
         {
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(false));
@@ -182,6 +182,30 @@ namespace InventoryManagementSystem.TestProject
         {
             List<Item> filtereditems = _itemService.GetFilterItems("category", "Tsss");
             Assert.That(filtereditems.Count, Is.EqualTo(0));
+        }
+        [Test, Order(16)]
+        public void TestFilterPriceItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("price", "1000", "<");
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(17)]
+        public void TestFilterPriceItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("price", "5", "!==");
+            Assert.That(filtereditems, Is.Null);
+        }
+        [Test, Order(18)]
+        public void TestFilterStockItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("stock", "4", ">=");
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(19)]
+        public void TestFilterStockItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("stock", "0", "!==");
+            Assert.That(filtereditems, Is.Null);
         }
     }
 }
