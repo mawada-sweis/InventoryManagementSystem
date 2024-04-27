@@ -521,14 +521,14 @@ namespace InventoryManagementSystem.Commands
         {
             _itemService = itemService;
         }
-        public Item Execute(List<Item> items)
+        public Item Execute(List<Item> items, List<ItemCategory> categories)
         {
             string userInput = GetUserInput("What is name of item for searching? ");
             Item itemSearched = items.Find(item => item.name == userInput);
             Item itemRetrieved = null;
-            if(itemSearched != null)
+            if (itemSearched != null)
             {
-                itemRetrieved = _itemService.GetItemByName(userInput);
+                itemRetrieved = _itemService.GetItemByName(userInput, categories);
             }
             return itemRetrieved;
         }

@@ -100,14 +100,14 @@ namespace InventoryManagementSystem.TestProject
             Assert.That(_itemService.UpdateItem(ref item, item), Is.EqualTo(false));
         }
 
-        [Test, Order(10)]
+        [Test, Order(12)]
         public void TestDeleteItem_valid()
         {
             item = items.FirstOrDefault(item => item.name == "Test update item");
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(true));
         }
 
-        [Test, Order(11)]
+        [Test, Order(13)]
         public void TestDeleteItem_invalid()
         {
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(false));
@@ -135,5 +135,29 @@ namespace InventoryManagementSystem.TestProject
         {
             Assert.That(_itemService.UpdateSoldItem(ref items, item.id, 3), Is.EqualTo(false));
         }
+
+        [Test, Order(10)]
+        public void TestSearchItem_valid()
+        {
+            Item itemRetrieved = _itemService.GetItemByName(item.name, categories);
+            Assert.That(item, Has.Property("id").EqualTo(itemRetrieved.id)
+                           & Has.Property("name").EqualTo(itemRetrieved.name)
+                           & Has.Property("description").EqualTo(itemRetrieved.description)
+                           & Has.Property("price").EqualTo(itemRetrieved.price)
+                           & Has.Property("status").EqualTo(itemRetrieved.status)
+                           & Has.Property("quantity").EqualTo(itemRetrieved.quantity)
+                           & Has.Property("sold").EqualTo(itemRetrieved.sold)
+                           & Has.Property("minQuantity").EqualTo(itemRetrieved.minQuantity)
+                           & Has.Property("category").EqualTo(itemRetrieved.category)
+                           & Has.Property("stock").EqualTo(itemRetrieved.stock)
+                           );
+
+        }
+        [Test, Order(11)]
+        public void TestSearchItem_invalid()
+        {
+            Assert.That(_itemService.GetItemByName("hallo tester", categories), Is.EqualTo(null));
+        }
+
     }
 }

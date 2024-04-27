@@ -199,8 +199,8 @@ namespace InventoryManagementSystem
                         deleteCategoryCommand.Execute(ref Categories);
                         break;
                     case "searchitem":
-                        Item itemSearched = Globals.searchItemByNameCommand.Execute(Items);
-                        if(itemSearched == null)
+                        Item itemSearched = Globals.searchItemByNameCommand.Execute(Items, Categories);
+                        if (itemSearched == null)
                         {
                             Console.WriteLine("The item is not exist!");
                         }
