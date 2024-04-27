@@ -254,5 +254,63 @@ namespace InventoryManagementSystem.Services.Items
                 return false;
             }
         }
+
+        public bool UpdateSoldItem(ref List<Item> items, Guid guid, int soldItems)
+        {
+            Item item = items.Find(itemSearch => itemSearch.id == guid);
+            if (item == null)
+            {
+                Console.WriteLine("item not found!");
+                return false;
+            }
+            if (soldItems > item.stock)
+            {
+                Console.WriteLine("There is no enough items in stock!");
+                return false;
+            }
+            int newStock = item.quantity - soldItems;
+            ItemStatus status;
+            if (item.stock <= item.minQuantity) status = ItemStatus.LowStock;
+            else if (item.stock > item.minQuantity) status = ItemStatus.InStock;
+            else if (item.stock == 0) status = ItemStatus.OutOfStock;
+            else status = ItemStatus.Unknown;
+
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string query = "UPDATE items " +
+                        "SET item_sold = @SoldValue, " +
+                        "item_stock = @Stock, " +
+                        "item_status = @Status " +
+                        "WHERE item_id = @ItemID";
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@ItemID", guid);
+                        command.Parameters.AddWithValue("@SoldValue", soldItems);
+                        command.Parameters.AddWithValue("@Stock", newStock);
+                        command.Parameters.AddWithValue("@Status", status.ToString());
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            item.sold = soldItems;
+                            item.stock = newStock;
+                            item.status = status;
+                            return true;
+                        }
+                        else return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
     }
 }

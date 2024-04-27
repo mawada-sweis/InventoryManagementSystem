@@ -84,6 +84,7 @@ namespace InventoryManagementSystem.TestProject
                 quantity = item.quantity,
                 sold = item.sold,
                 minQuantity = item.minQuantity,
+                stock = item.stock,
                 category = categories[0]
             };
 
@@ -99,14 +100,14 @@ namespace InventoryManagementSystem.TestProject
             Assert.That(_itemService.UpdateItem(ref item, item), Is.EqualTo(false));
         }
 
-        [Test, Order(8)]
+        [Test, Order(10)]
         public void TestDeleteItem_valid()
         {
             item = items.FirstOrDefault(item => item.name == "Test update item");
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(true));
         }
 
-        [Test, Order(9)]
+        [Test, Order(11)]
         public void TestDeleteItem_invalid()
         {
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(false));
@@ -121,6 +122,18 @@ namespace InventoryManagementSystem.TestProject
         public void TestUpdateQuantity_invalid()
         {
             Assert.That(_itemService.UpdateQuantity(ref items, item.id, item.minQuantity - 1), Is.EqualTo(false));
+        }
+
+        [Test, Order(8)]
+        public void TestUpdateSold_valid()
+        {
+            Assert.That(_itemService.UpdateSoldItem(ref items, item.id, 1), Is.EqualTo(true));
+        }
+
+        [Test, Order(9)]
+        public void TestUpdateSold_invalid()
+        {
+            Assert.That(_itemService.UpdateSoldItem(ref items, item.id, 3), Is.EqualTo(false));
         }
     }
 }

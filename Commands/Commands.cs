@@ -474,4 +474,43 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+
+    public class UpdateSoldItemCommand
+    {
+        private readonly IItemService _itemService;
+        public UpdateSoldItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> items)
+        {
+            try
+            {
+                string itemName = GetUserInput("Enter the name of the item you want to update:");
+
+                Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
+                if (itemToUpdate != null)
+                {
+                    int itemSolded = Int32.Parse(GetUserInput("Enter the number of sold items:"));
+                    if (_itemService.UpdateSoldItem(ref items, itemToUpdate.id, itemSolded))
+                    {
+                        Console.WriteLine("Updated successfully!");
+                        return;
+                    }
+                }
+                else Console.WriteLine($"Item with name '{itemName}' not found.");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
 }

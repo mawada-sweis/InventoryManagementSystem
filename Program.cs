@@ -102,6 +102,7 @@ namespace InventoryManagementSystem
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(Globals.categoriesService);
             Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(Globals.categoriesService);
             Commands.UpdateQuntityItemCommand updateQuntityItemCommand = new UpdateQuntityItemCommand(Globals.itemService);
+            Commands.UpdateSoldItemCommand updateSoldItemCommand = new UpdateSoldItemCommand(Globals.itemService);
 
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
@@ -112,6 +113,7 @@ namespace InventoryManagementSystem
             {
                 Globals.getCategoriesCommand.Execute(Categories);
                 Globals.getItemsCommand.Execute(ref Items);
+
                 switch (userInput)
                 {
                     case "reset-password":
@@ -125,6 +127,8 @@ namespace InventoryManagementSystem
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n" +
                             "Update Quantity of specific item => UpdateQuantity\n" +
+                            "Sold item => SoldItem\n" +
+                            "=========================================================\n" +
                             "Display All Categories => DisplayCategories\n" +
                             "Add New Item Category => AddCategory\n" +
                             "Update Category by Name => UpdateCategory\n" +
@@ -166,6 +170,9 @@ namespace InventoryManagementSystem
                         break;
                     case "updatequantity":
                         updateQuntityItemCommand.Execute(ref Items);
+                        break;
+                    case "solditem":
+                        updateSoldItemCommand.Execute(ref Items);
                         break;
                     case "displaycategories":
                         if (Categories.Count == 0)
