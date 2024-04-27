@@ -10,57 +10,86 @@ using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Commands
 {
+    /// <summary>
+    /// Represents a command for user login.
+    /// </summary>
     public class LoginCommand
     {
         private readonly IAuthService _authService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginCommand"/> class.
+        /// </summary>
+        /// <param name="authService">The authentication service.</param>
         public LoginCommand(IAuthService authService)
         {
             this._authService = authService;
         }
-
+        /// <summary>
+        /// Executes the login command.
+        /// </summary>
+        /// <param name="isAuthenticated">A reference to a boolean indicating whether the user is authenticated.</param>
+        /// <param name="user">A reference to the user attempting to log in.</param>
         public void Execute(ref bool isAuthenticated, ref User user)
         {
+            // Attempt to authenticate the user
             if (_authService.Login(user.userEmail, user.userPassword))
             {
                 Console.WriteLine("Login successful");
                 isAuthenticated = true;
+                // Retrieve additional user information
                 _authService.GetUserInfo(ref user);
             }
             else
             {
+                // If authentication fails, set the user reference to null
                 user = null;
                 Console.WriteLine("Login failed");
             }
         }
     }
 
+    /// <summary>
+    /// Represents a command for user signup.
+    /// </summary>
     public class SignupCommand
     {
         private readonly IAuthService _authService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SignupCommand"/> class.
+        /// </summary>
+        /// <param name="authService">The authentication service.</param>
         public SignupCommand(IAuthService authService)
         {
             this._authService = authService;
         }
 
+        /// <summary>
+        /// Executes the signup command.
+        /// </summary>
+        /// <param name="isAuthenticated">A reference to a boolean indicating whether the user is authenticated.</param>
+        /// <param name="user">A reference to the user to be signed up.</param>
         public void Execute(ref bool isAuthenticated, ref User user)
         {
+            // Prompt user for signup information
             user.userName = GetUserInput("Username: ");
             user.userAddress = GetUserInput("Address: ");
             user.userType = GetUserInput("Are you an Admin? Y/N: ").Equals('N') ? UserType.User : UserType.Admin;
 
-            if (_authService.Register(user) &
-                    _authService.Login(user.userEmail, user.userPassword))
+            // Register the user and attempt login
+            if (_authService.Register(user) && _authService.Login(user.userEmail, user.userPassword))
             {
-                Console.WriteLine("Login Succesful");
+                Console.WriteLine("Login Successful");
                 isAuthenticated = true;
+                // Retrieve additional user information
                 _authService.GetUserInfo(ref user);
             }
             else
             {
+                // If registration fails, set user reference to null
                 user = null;
-                Console.WriteLine("Email is already exist!");
+                Console.WriteLine("Email already exists!");
             }
         }
 
@@ -69,76 +98,111 @@ namespace InventoryManagementSystem.Commands
             Console.Write(prompt);
             return Console.ReadLine().Trim();
         }
-
     }
 
+    /// <summary>
+    /// Represents a command for resetting a user's password.
+    /// </summary>
     public class ResetPassCommand
     {
         private readonly IAuthService _authService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ResetPassCommand"/> class.
+        /// </summary>
+        /// <param name="authService">The authentication service.</param>
         public ResetPassCommand(IAuthService authService)
         {
             _authService = authService;
         }
+
+        /// <summary>
+        /// Executes the password reset command.
+        /// </summary>
+        /// <param name="user">A reference to the user whose password is to be reset.</param>
         public void Execute(ref User user)
         {
+            // Prompt user for new password
             string newPassword = GetUserInput("New password: ");
+
+            // Attempt to reset the password
             bool resetResult = _authService.resetPassword(ref user, newPassword);
 
             if (resetResult) Console.WriteLine("Password updated successfully");
 
-            else Console.WriteLine("New password same as current one!");
+            else Console.WriteLine("New password is the same as the current one!");
         }
+
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
             return Console.ReadLine().Trim();
         }
-
     }
 
+    /// <summary>
+    /// Represents a command for adding an item.
+    /// </summary>
     public class AddItemCommand
     {
         private readonly IItemService _itemService;
         private readonly ICategoriesService _categoriesService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AddItemCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
+        /// <param name="categoriesService">The categories service.</param>
         public AddItemCommand(IItemService itemService, ICategoriesService categoriesService)
         {
             _itemService = itemService;
             _categoriesService = categoriesService;
         }
+
+        /// <summary>
+        /// Executes the command to add an item.
+        /// </summary>
+        /// <param name="items">The list of items to which the new item will be added.</param>
         public void Execute(ref List<Item> items)
         {
             Item item = new Item();
+
+            // Prompt user for item name
             string userInput = GetUserInput("Item name: ");
+
+            // Check if item with the same name already exists
             if (items.Any(itemSearched => itemSearched.name == userInput))
             {
-                Console.WriteLine("{0} item exist", userInput);
+                Console.WriteLine("{0} item exists", userInput);
                 return;
             }
+
             item.name = userInput;
-            item.description = GetUserInput("description: ");
+            item.description = GetUserInput("Description: ");
 
-            string[] label = { "price", "quantity", "sold", "minQuantity" };
+            // Prompt user for item details
+            string[] labels = { "price", "quantity", "sold", "minQuantity" };
 
-            for (int i = 0; i < label.Length; i++)
+            for (int i = 0; i < labels.Length; i++)
             {
-                int temp = int.Parse(GetUserInput($"{label[i]}: "));
+                int temp = int.Parse(GetUserInput($"{labels[i]}: "));
                 while (temp < 0)
                 {
-                    Console.WriteLine($"{label[i]} must be greater than 0. Please enter correct value");
-                    temp = int.Parse(GetUserInput($"{label[i]}: "));
+                    Console.WriteLine($"{labels[i]} must be greater than 0. Please enter correct value");
+                    temp = int.Parse(GetUserInput($"{labels[i]}: "));
                 }
-                PropertyInfo propertyInfo = item.GetType().GetProperty(label[i]);
+                PropertyInfo propertyInfo = item.GetType().GetProperty(labels[i]);
                 propertyInfo.SetValue(item, temp);
             }
 
+            // Calculate item stock and status
             item.stock = item.quantity - item.sold;
 
             if (item.stock == 0) item.status = ItemStatus.OutOfStock;
-
             else if (item.stock < item.minQuantity) item.status = ItemStatus.LowStock;
-
             else item.status = ItemStatus.InStock;
 
+            // Get available categories
             List<ItemCategory> categories = new List<ItemCategory>();
             _categoriesService.GetCategories(ref categories);
             var categoryStrings = categories.Select(category => category.ToString()).ToList();
@@ -148,20 +212,22 @@ namespace InventoryManagementSystem.Commands
             ItemCategory categorySearched = new ItemCategory();
             while (!isExist)
             {
-                userInput = GetUserInput($"choose category: {categoriesString}: ");
+                userInput = GetUserInput($"Choose category: {categoriesString}: ");
                 categorySearched = categories.Find(tempCategory => tempCategory.name == userInput);
                 if (categorySearched != null) isExist = true;
-                else Console.WriteLine("{0} category is not exist", userInput);
+                else Console.WriteLine("{0} category does not exist", userInput);
             }
 
             item.category = new ItemCategory { id = categorySearched.id, name = userInput };
 
             item.id = Guid.NewGuid();
-            if (_itemService.AddItem(item, ref items))
-                Console.WriteLine($"{item.name} addedd successfully");
-            else Console.WriteLine($"{item.name} addedd faild");
 
+            // Attempt to add the item
+            if (_itemService.AddItem(item, ref items))
+                Console.WriteLine($"{item.name} added successfully");
+            else Console.WriteLine($"{item.name} add failed");
         }
+
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);
@@ -169,26 +235,53 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for retrieving items.
+    /// </summary>
     public class GetItemsCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetItemsCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public GetItemsCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to retrieve items.
+        /// </summary>
+        /// <param name="items">The list of items to be retrieved.</param>
         public void Execute(ref List<Item> items)
         {
             _itemService.GetItems(ref items);
         }
     }
 
+    /// <summary>
+    /// Represents a command for updating an item.
+    /// </summary>
     public class UpdateItemCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateItemCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public UpdateItemCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to update an item.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
+        /// <param name="categories">The list of item categories.</param>
         public void Execute(ref List<Item> items, ref List<ItemCategory> categories)
         {
             try
@@ -218,6 +311,7 @@ namespace InventoryManagementSystem.Commands
                 updatedItem.sold = itemToUpdate.sold;
                 updatedItem.stock = itemToUpdate.stock;
 
+                // Prompt user for item updates
                 string userInput =
                     GetUserInput("Do you want to update the name of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.name = GetUserInput("Enter the new name:");
@@ -256,17 +350,20 @@ namespace InventoryManagementSystem.Commands
                 }
                 else updatedItem.category = itemToUpdate.category;
 
+                // If category is null, assign a default value
                 if (itemToUpdate.category == null)
                 {
                     itemToUpdate.category = new ItemCategory { id = Guid.NewGuid(), name = "" };
                 }
 
+                // Check if any changes were made to the item
                 if (itemToUpdate.name != updatedItem.name ||
                 itemToUpdate.description != updatedItem.description ||
                 itemToUpdate.price != updatedItem.price ||
                 itemToUpdate.minQuantity != updatedItem.minQuantity ||
                 itemToUpdate.category != updatedItem.category)
                 {
+                    // Attempt to update the item
                     if (_itemService.UpdateItem(ref itemToUpdate, updatedItem))
                         Console.WriteLine("Item updated successfully!");
 
@@ -289,19 +386,32 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for deleting an item.
+    /// </summary>
     public class DeleteItemCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeleteItemCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public DeleteItemCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
 
+        /// <summary>
+        /// Executes the command to delete an item.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
         public void Execute(ref List<Item> items)
         {
-            string userInput = GetUserInput("What is name of item to delete? ");
+            string userInput = GetUserInput("What is the name of the item to delete? ");
             if (userInput != null)
             {
+                // Find the ID of the item to delete
                 Guid? itemID = items.Find(item => item.name == userInput)?.id;
 
                 if (itemID == null)
@@ -309,7 +419,7 @@ namespace InventoryManagementSystem.Commands
                     Console.WriteLine("Item not found in the list.");
                     return;
                 }
-
+                // Attempt to delete the item
                 else _itemService.DeleteItem(ref items, itemID.Value);
             }
         }
@@ -320,30 +430,56 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for retrieving categories.
+    /// </summary>
     public class GetCategoriesCommand
     {
         private readonly ICategoriesService _categoriesServic;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetCategoriesCommand"/> class.
+        /// </summary>
+        /// <param name="categoriesService">The categories service.</param>
         public GetCategoriesCommand(ICategoriesService categoriesService)
         {
             this._categoriesServic = categoriesService;
         }
+
+        /// <summary>
+        /// Executes the command to retrieve categories.
+        /// </summary>
+        /// <param name="categories">The list of categories to be retrieved.</param>
         public void Execute(List<ItemCategory> categories)
         {
             if (!_categoriesServic.GetCategories(ref categories))
-                Console.WriteLine("No categories until now");
+                Console.WriteLine("No categories available.");
         }
     }
 
+    /// <summary>
+    /// Represents a command for adding a category.
+    /// </summary>
     public class AddCategoryCommand
     {
         private readonly ICategoriesService _categoriesServic;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AddCategoryCommand"/> class.
+        /// </summary>
+        /// <param name="categoriesService">The categories service.</param>
         public AddCategoryCommand(ICategoriesService categoriesService)
         {
             this._categoriesServic = categoriesService;
         }
+
+        /// <summary>
+        /// Executes the command to add a category.
+        /// </summary>
+        /// <param name="categories">The list of categories.</param>
         public void Execute(ref List<ItemCategory> categories)
         {
-            string userInput = GetUserInput("What is name of Category? ");
+            string userInput = GetUserInput("What is the name of the category? ");
             if (userInput != null)
             {
                 if (!categories.Any(category => category.name == userInput))
@@ -360,7 +496,7 @@ namespace InventoryManagementSystem.Commands
                 }
                 else
                 {
-                    Console.WriteLine("{0} category name is exist.", userInput);
+                    Console.WriteLine("{0} category name already exist.", userInput);
                 }
             }
             else Console.WriteLine("Category name must not be empty");
@@ -372,25 +508,38 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for updating a category.
+    /// </summary>
     public class UpdateCategoryCommand
     {
-        private readonly ICategoriesService _categoriesServic;
+        private readonly ICategoriesService _categoriesService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateCategoryCommand"/> class.
+        /// </summary>
+        /// <param name="categoriesService">The categories service.</param>
         public UpdateCategoryCommand(ICategoriesService categoriesService)
         {
-            _categoriesServic = categoriesService;
+            _categoriesService = categoriesService;
         }
+
+        /// <summary>
+        /// Executes the command to update a category.
+        /// </summary>
+        /// <param name="categories">The list of categories.</param>
         public void Execute(ref List<ItemCategory> categories)
         {
-            string userInput = GetUserInput("What is name of category do you want to change? ");
+            string userInput = GetUserInput("What is the name of the category you want to change? ");
 
             var category = categories.FirstOrDefault(c => c.name.Equals(userInput,
                 StringComparison.OrdinalIgnoreCase));
             if (category != null)
             {
-                userInput = GetUserInput("What is new name of category? ");
-                if (_categoriesServic.UpdateCategory(userInput, ref category, ref categories))
-                    Console.WriteLine("Categroy updated successfully");
-                else Console.WriteLine("Categroy not updated!");
+                userInput = GetUserInput("What is the new name of the category? ");
+                if (_categoriesService.UpdateCategory(userInput, ref category, ref categories))
+                    Console.WriteLine("Category updated successfully");
+                else Console.WriteLine("Category not updated!");
             }
             else
             {
@@ -405,22 +554,35 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for deleting a category.
+    /// </summary>
     public class DeleteCategoryCommand
     {
-        private readonly ICategoriesService _categoriesServic;
+        private readonly ICategoriesService _categoriesService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeleteCategoryCommand"/> class.
+        /// </summary>
+        /// <param name="categoriesService">The categories service.</param>
         public DeleteCategoryCommand(ICategoriesService categoriesService)
         {
-            _categoriesServic = categoriesService;
+            _categoriesService = categoriesService;
         }
+
+        /// <summary>
+        /// Executes the command to delete a category.
+        /// </summary>
+        /// <param name="categories">The list of categories.</param>
         public void Execute(ref List<ItemCategory> categories)
         {
-            string userInput = GetUserInput("What is name of category do you want to delete? ");
+            string userInput = GetUserInput("What is the name of category do you want to delete? ");
 
             ItemCategory categoryToDelete = categories.FirstOrDefault(category => category.name.Equals(userInput,
                 StringComparison.OrdinalIgnoreCase));
             if (categoryToDelete != null)
             {
-                if (_categoriesServic.DeleteCategory(ref categoryToDelete, ref categories))
+                if (_categoriesService.DeleteCategory(ref categoryToDelete, ref categories))
                     Console.WriteLine("Category deleted successfully.");
                 else Console.WriteLine("Category not found in the database.");
             }
@@ -437,13 +599,25 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
-    public class UpdateQuntityItemCommand
+    /// <summary>
+    /// Represents a command for updating the quantity of an item.
+    /// </summary>
+    public class UpdateQuantityItemCommand
     {
         private readonly IItemService _itemService;
-        public UpdateQuntityItemCommand(IItemService itemService)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateQuantityItemCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
+        public UpdateQuantityItemCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to update the quantity of an item.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
         public void Execute(ref List<Item> items)
         {
             try
@@ -476,13 +650,26 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for updating the sold quantity of an item.
+    /// </summary>
     public class UpdateSoldItemCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateSoldItemCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public UpdateSoldItemCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to update the sold quantity of an item.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
         public void Execute(ref List<Item> items)
         {
             try
@@ -515,16 +702,31 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for searching an item by its name.
+    /// </summary>
     public class SearchItemByNameCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchItemByNameCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public SearchItemByNameCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to search for an item by its name.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
+        /// <param name="categories">The list of categories.</param>
+        /// <returns>The found item.</returns>
         public Item Execute(List<Item> items, List<ItemCategory> categories)
         {
-            string userInput = GetUserInput("What is name of item for searching? ");
+            string userInput = GetUserInput("What is the name of the item for searching? ");
             Item itemSearched = items.Find(item => item.name == userInput);
             Item itemRetrieved = null;
             if (itemSearched != null)
@@ -540,13 +742,28 @@ namespace InventoryManagementSystem.Commands
         }
     }
 
+    /// <summary>
+    /// Represents a command for filtering items by specified criteria.
+    /// </summary>
     public class FilterItemsByCriteriaCommand
     {
         private readonly IItemService _itemService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FilterItemsByCriteriaCommand"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
         public FilterItemsByCriteriaCommand(IItemService itemService)
         {
             _itemService = itemService;
         }
+
+        /// <summary>
+        /// Executes the command to filter items by the specified criteria.
+        /// </summary>
+        /// <param name="itemsFiltered">The list of filtered items.</param>
+        /// <param name="criteria">The filtering criteria.</param>
+        /// <param name="operatorString">The optional operator string.</param>
         public void Execute(ref List<Item> itemsFiltered, string criteria, [Optional] string operatorString)
         {
             itemsFiltered.Clear();

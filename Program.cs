@@ -187,7 +187,7 @@ namespace InventoryManagementSystem
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(Globals.categoriesService);
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(Globals.categoriesService);
             Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(Globals.categoriesService);
-            Commands.UpdateQuntityItemCommand updateQuntityItemCommand = new UpdateQuntityItemCommand(Globals.itemService);
+            Commands.UpdateQuantityItemCommand updateQuntityItemCommand = new UpdateQuantityItemCommand(Globals.itemService);
             Commands.UpdateSoldItemCommand updateSoldItemCommand = new UpdateSoldItemCommand(Globals.itemService);
 
             // Retrieve categories and items from global variables
