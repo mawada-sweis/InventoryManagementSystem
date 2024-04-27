@@ -6,14 +6,28 @@ using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Services.Items
 {
+    /// <summary>
+    /// Service for managing items.
+    /// </summary>
     internal class ItemService : IItemService
     {
         private readonly string _connectionString;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemService"/> class.
+        /// </summary>
+        /// <param name="connectionString">The connection string for the database.</param>
         public ItemService(string connectionString)
         {
             this._connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Adds a new item to the database.
+        /// </summary>
+        /// <param name="newItem">The item to add.</param>
+        /// <param name="items">The list of items to update after adding.</param>
+        /// <returns>True if the item is successfully added, otherwise false.</returns>
         public bool AddItem(Item newItem, ref List<Item> items)
         {
             string query = @"INSERT INTO items (item_id, item_name, item_description, item_price, item_status,
@@ -52,6 +66,12 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Deletes an item from the database.
+        /// </summary>
+        /// <param name="items">The list of items to delete from.</param>
+        /// <param name="guid">The ID of the item to delete.</param>
+        /// <returns>True if the item is successfully deleted, otherwise false.</returns>
         public bool DeleteItem(ref List<Item> items, Guid guid)
         {
             try
@@ -87,6 +107,10 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Retrieves all items from the database.
+        /// </summary>
+        /// <param name="items">The list to store retrieved items.</param>
         public void GetItems(ref List<Item> items)
         {
             try
@@ -136,6 +160,12 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Updates an existing item in the database.
+        /// </summary>
+        /// <param name="item">The item to update.</param>
+        /// <param name="newItem">The updated item details.</param>
+        /// <returns>True if the item is successfully updated, otherwise false.</returns>
         public bool UpdateItem(ref Item item, Item newItem)
         {
             if (newItem.name != item.name ||
@@ -202,6 +232,13 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Updates the quantity of an item in the database.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
+        /// <param name="guid">The ID of the item to update.</param>
+        /// <param name="newQuantity">The new quantity of the item.</param>
+        /// <returns>True if the quantity is successfully updated, otherwise false.</returns>
         public bool UpdateQuantity(ref List<Item> items, Guid guid, int newQuantity)
         {
             var itemSearch = items.Find(item => item.id == guid);
@@ -256,6 +293,13 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Updates the sold quantity of an item in the database.
+        /// </summary>
+        /// <param name="items">The list of items.</param>
+        /// <param name="guid">The ID of the item to update.</param>
+        /// <param name="soldItems">The quantity of items sold.</param>
+        /// <returns>True if the sold quantity is successfully updated, otherwise false.</returns>
         public bool UpdateSoldItem(ref List<Item> items, Guid guid, int soldItems)
         {
             Item item = items.Find(itemSearch => itemSearch.id == guid);
@@ -314,6 +358,12 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Retrieves an item by its name from the database.
+        /// </summary>
+        /// <param name="itemName">The name of the item to retrieve.</param>
+        /// <param name="categories">The list of categories used to map the item's category.</param>
+        /// <returns>The retrieved item if found, otherwise null.</returns>
         public Item GetItemByName(string itemName, List<ItemCategory> categories)
         {
             Item item = null;
@@ -364,6 +414,15 @@ namespace InventoryManagementSystem.Services.Items
             }
         }
 
+        /// <summary>
+        /// Retrieves items from the database based on the specified criteria and value.
+        /// </summary>
+        /// <param name="criteria">The filtering criteria (e.g., status, category, price, stock).</param>
+        /// <param name="criteriaValue">The value of the filtering criteria.</param>
+        /// <param name="operatorString">Optional. The comparison operator for numeric criteria.</param>
+        /// <returns>
+        /// A list of items matching the specified criteria if found, otherwise null.
+        /// </returns>
         public List<Item> GetFilterItems(string criteria, string creteriaValue, [Optional] string operatorString)
         {
             if (operatorString != null)
