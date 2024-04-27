@@ -22,6 +22,7 @@ namespace InventoryManagementSystem.TestProject
         [SetUp]
         public void SetUp()
         {
+            // Set up the connection string and initialize the category service
             _connectionString =
                 $"Host=localhost;" +
                 $"Port=5432;" +
@@ -34,6 +35,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(1)]
         public void TestGetCategories()
         {
+            // Test fetching categories
             Assert.That(_categoriesService.GetCategories(ref categories), Is.EqualTo(true));
             Assert.That(categories.Count, Is.GreaterThan(0));
         }
@@ -41,18 +43,21 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(2)]
         public void TestAddCategory_valid()
         {
+            // Test adding a new category
             Assert.That(_categoriesService.AddCategory(category, ref categories), Is.EqualTo(true));
         }
 
         [Test, Order(3)]
         public void TestAddCategory_invalid()
         {
+            // Test adding an existing category (invalid)
             Assert.That(_categoriesService.AddCategory(category, ref categories), Is.EqualTo(false));
         }
 
         [Test, Order(4)]
         public void TestUpdateCategory_valid()
         {
+            // Test updating a category (valid)
             Assert.That(_categoriesService.UpdateCategory("new name", ref category, ref categories), Is.EqualTo(true));
             var categorySearched = categories.Find(cat => cat.name.Equals("new name"));
             Assert.That(categorySearched, Is.Not.Null);
@@ -61,17 +66,20 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(5)]
         public void TestUpdateCategory_invalid()
         {
+            // Test updating a category (invalid)
             Assert.That(_categoriesService.UpdateCategory(category.name, ref category, ref categories), Is.EqualTo(false));
         }
 
         [Test, Order(6)]
         public void TestRemoveCategory_valid()
         {
+            // Test removing a category (valid)
             Assert.That(_categoriesService.DeleteCategory(ref category, ref categories), Is.EqualTo(true));
         }
         [Test, Order(7)]
         public void TestRemoveCategory_invalid()
         {
+            // Test removing a category (invalid)
             Assert.That(_categoriesService.DeleteCategory(ref category, ref categories), Is.EqualTo(false));
 
         }

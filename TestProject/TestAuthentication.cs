@@ -11,6 +11,7 @@ namespace InventoryManagementSystem.TestProject
         private IAuthService _authService;
         private string _connectionString;
 
+        // Sample user data for testing
         User existUser = new User
         {
             userEmail = "mawada@gmail.com",
@@ -42,6 +43,7 @@ namespace InventoryManagementSystem.TestProject
         [SetUp]
         public void Setup()
         {
+            // Set up the connection string and initialize the authentication service
             _connectionString =
                 $"Host=localhost;" +
                 $"Port=5432;" +
@@ -54,6 +56,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(1)]
         public void TestLogin_Valid()
         {
+            // Test valid login credentials
             Assert.That(_authService.Login(existUser.userEmail, existUser.userPassword), Is.EqualTo(true));
             Assert.That(_authService.Login(existAdmin.userEmail, existAdmin.userPassword), Is.EqualTo(true));
         }
@@ -61,6 +64,7 @@ namespace InventoryManagementSystem.TestProject
         [Test]
         public void TestRole()
         {
+            // Test user roles after login
             _authService.GetUserInfo(ref existUser);
             Assert.That(existUser.userType, Is.EqualTo(UserType.User));
             _authService.GetUserInfo(ref existAdmin);
@@ -70,6 +74,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(2)]
         public void TestLogin_Invalid()
         {
+            // Test invalid login credentials
             string invalidUserEmail = "exampleUserWrong@gmail.com";
             string invalidUserPass = "123";
             string invalidAdminEmail = "exampleAdminWrong@gmail.com";
@@ -82,6 +87,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(3)]
         public void TestSignup_valid()
         {
+            // Test valid user registration
             Assert.That(_authService.Register(newUser), Is.EqualTo(true));
             Assert.That(_authService.Register(newAdmin), Is.EqualTo(true));
         }
@@ -89,6 +95,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(4)]
         public void TestSignup_Invalid()
         {
+            // Test invalid user registration (duplicate)
             Assert.That(_authService.Register(newUser), Is.EqualTo(false));
             Assert.That(_authService.Register(newAdmin), Is.EqualTo(false));
         }
@@ -96,6 +103,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(5)]
         public void TestRestPass_valid()
         {
+            // Test valid password reset
             _authService.GetUserInfo(ref newUser);
             Assert.That(_authService.resetPassword(ref newUser, "456"), Is.EqualTo(true));
 
@@ -106,6 +114,7 @@ namespace InventoryManagementSystem.TestProject
         [Test, Order(6)]
         public void TestRestPass_invalid()
         {
+            // Test invalid password reset (incorrect previous password)
             _authService.GetUserInfo(ref newUser);
             Assert.That(_authService.resetPassword(ref newUser, "456"), Is.EqualTo(false));
 
