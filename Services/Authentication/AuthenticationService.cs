@@ -6,15 +6,28 @@ using System.Security.Cryptography;
 
 namespace InventoryManagementSystem.Services.Authentication
 {
+    /// <summary>
+    /// Service for user authentication and related operations.
+    /// </summary>
     public class AuthenticationService : IAuthService
     {
         private readonly string _connectionString;
 
+        /// <summary>
+        /// Initializes a new instance of the AuthenticationService class with the specified database connection string.
+        /// </summary>
+        /// <param name="connectionString">The connection string for the database.</param>
         public AuthenticationService(string connectionString)
         {
             this._connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Hashes a password using a salt.
+        /// </summary>
+        /// <param name="password">The password to hash.</param>
+        /// <param name="currentSalt">Optional current salt.</param>
+        /// <returns>A tuple containing the hashed password and the salt.</returns>
         public (byte[], string) HashPasword(string password, [Optional] string currentSalt)
         {
             byte[] salt;
@@ -40,6 +53,12 @@ namespace InventoryManagementSystem.Services.Authentication
             return (salt, Convert.ToBase64String(hashBytes));
         }
 
+        /// <summary>
+        /// Authenticates a user login.
+        /// </summary>
+        /// <param name="email">The email of the user.</param>
+        /// <param name="password">The password of the user.</param>
+        /// <returns>True if login is successful, otherwise false.</returns>
         public bool Login(string email, string password)
         {
             using (var conn = new NpgsqlConnection(_connectionString))
@@ -70,6 +89,11 @@ namespace InventoryManagementSystem.Services.Authentication
             return false;
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="user">The user object containing registration details.</param>
+        /// <returns>True if registration is successful, otherwise false.</returns>
         public bool Register(User user)
         {
             (byte[] hashSalt, string hashedPassword) = HashPasword(user.userPassword);
@@ -107,11 +131,17 @@ namespace InventoryManagementSystem.Services.Authentication
             }
         }
 
+        /// <summary>
+        /// Resets the password of a user.
+        /// </summary>
+        /// <param name="user">The user object to reset password for.</param>
+        /// <param name="newPassword">The new password.</param>
+        /// <returns>True if password reset is successful, otherwise false.</returns>
         public bool resetPassword(ref User user, string newPassword)
         {
             (byte[] hashSalt, string hashedPassword) = HashPasword(newPassword, user.userSalt);
             string stringSalt = Convert.ToBase64String(hashSalt);
-            
+
             if (user.userPassword == hashedPassword && user.userSalt == stringSalt) return false;
 
             using (var conn = new NpgsqlConnection(_connectionString))
@@ -138,6 +168,10 @@ namespace InventoryManagementSystem.Services.Authentication
             }
         }
 
+        /// <summary>
+        /// Retrieves information about a user.
+        /// </summary>
+        /// <param name="user">The user object to populate with information.</param>
         public void GetUserInfo(ref User user)
         {
             using (var conn = new NpgsqlConnection(_connectionString))
