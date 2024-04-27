@@ -23,13 +23,12 @@ namespace InventoryManagementSystem
 
             public static readonly Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
-            public static Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
+            public static Commands.SearchItemByNameCommand searchItemByNameCommand = new SearchItemByNameCommand(itemService);
+            public static Commands.FilterItemsByCriteriaCommand filterItemsByCriteriaCommand = new FilterItemsByCriteriaCommand(itemService);
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
-
-
         }
         private static string ReadPassword()
         {
@@ -60,6 +59,36 @@ namespace InventoryManagementSystem
         {
             Console.Write("Write a command: \\api\\{0}", rout);
             return Console.ReadLine().Trim().ToLower();
+        }
+        static void PrintFilteredItems(List<Item> FilteredItems, List<ItemCategory> Categories)
+        {
+            foreach (Item item in FilteredItems)
+            {
+                item.category.name = Categories.Find(cat => cat.id == item.category.id).name;
+            }
+            if (FilteredItems.Count == 0)
+            {
+                Console.WriteLine("The critiria is not match any item!");
+                return;
+            }
+            Console.WriteLine("Items:");
+            int count = 1;
+            foreach (Item item in FilteredItems)
+            {
+                Console.WriteLine("Item {0}:", count);
+                Console.WriteLine("name: {0}", item.name);
+                Console.WriteLine("description: {0}", item.description);
+                Console.WriteLine("price: {0}", item.price);
+                Console.WriteLine("status: {0}", item.status.ToString());
+                Console.WriteLine("quantity: {0}", item.quantity);
+                Console.WriteLine("sold: {0}", item.sold);
+                Console.WriteLine("minimum quantity: {0}", item.minQuantity);
+                Console.WriteLine("quantity in stock: {0}", item.stock);
+                if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
+                else Console.WriteLine("category: NOT CATEGORIZED");
+                Console.WriteLine("=================");
+                count++;
+            }
         }
         static void UserMenu(ref User user)
         {
@@ -99,14 +128,17 @@ namespace InventoryManagementSystem
             Console.Clear();
             Console.WriteLine("Welcome, {0}", user.userName);
             Commands.AddItemCommand addItemCommand = new AddItemCommand(Globals.itemService, Globals.categoriesService);
+            Commands.UpdateItemCommand updateItemCommand = new UpdateItemCommand(Globals.itemService);
             Commands.DeleteItemCommand deleteItemCommand = new DeleteItemCommand(Globals.itemService);
             Commands.AddCategoryCommand addCategoryCommand = new AddCategoryCommand(Globals.categoriesService);
             Commands.UpdateCategoryCommand updateCategoryCommand = new UpdateCategoryCommand(Globals.categoriesService);
             Commands.DeleteCategoryCommand deleteCategoryCommand = new DeleteCategoryCommand(Globals.categoriesService);
             Commands.UpdateQuntityItemCommand updateQuntityItemCommand = new UpdateQuntityItemCommand(Globals.itemService);
+            Commands.UpdateSoldItemCommand updateSoldItemCommand = new UpdateSoldItemCommand(Globals.itemService);
 
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
+            List<Item> FilteredItems = new List<Item>();
 
             string homeRout = $"{user.userName}\\admin\\home\\";
             string userInput = GetUserInput(homeRout);
@@ -114,6 +146,7 @@ namespace InventoryManagementSystem
             {
                 Globals.getCategoriesCommand.Execute(Categories);
                 Globals.getItemsCommand.Execute(ref Items);
+
                 switch (userInput)
                 {
                     case "reset-password":
@@ -127,10 +160,18 @@ namespace InventoryManagementSystem
                             "Update Item by Name => UpdateItem\n" +
                             "Delete Item by Name => DeleteItem\n" +
                             "Update Quantity of specific item => UpdateQuantity\n" +
+                            "Sold item => SoldItem\n" +
+                            "=========================================================\n" +
                             "Display All Categories => DisplayCategories\n" +
                             "Add New Item Category => AddCategory\n" +
                             "Update Category by Name => UpdateCategory\n" +
-                            "Delete Category by Name => DeleteCategory");
+                            "Delete Category by Name => DeleteCategory\n" +
+                            "=========================================================\n" +
+                            "Search item by name => SearchItem\n" +
+                            "Filter items by status => FilterStatus\n" +
+                            "Filter items by category => FilterCategory\n" +
+                            "Filter items by price => FilterPrice\n" +
+                            "Filter items by stock => FilterStock\n");
                         break;
                     case "additem":
                         addItemCommand.Execute(ref Items);
@@ -153,6 +194,7 @@ namespace InventoryManagementSystem
                             Console.WriteLine("quantity: {0}", item.quantity);
                             Console.WriteLine("sold: {0}", item.sold);
                             Console.WriteLine("minimum quantity: {0}", item.minQuantity);
+                            Console.WriteLine("quantity in stock: {0}", item.stock);
                             if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
                             else Console.WriteLine("category: NOT CATEGORIZED");
                             Console.WriteLine("=================");
@@ -160,13 +202,16 @@ namespace InventoryManagementSystem
                         }
                         break;
                     case "updateitem":
-                        Globals.updateItemCommand.Execute(ref Items, ref Categories);
+                        updateItemCommand.Execute(ref Items, ref Categories);
                         break;
                     case "deleteitem":
                         deleteItemCommand.Execute(ref Items);
                         break;
                     case "updatequantity":
                         updateQuntityItemCommand.Execute(ref Items);
+                        break;
+                    case "solditem":
+                        updateSoldItemCommand.Execute(ref Items);
                         break;
                     case "displaycategories":
                         if (Categories.Count == 0)
@@ -188,6 +233,44 @@ namespace InventoryManagementSystem
                         break;
                     case "deletecategory":
                         deleteCategoryCommand.Execute(ref Categories);
+                        break;
+                    case "searchitem":
+                        Item itemSearched = Globals.searchItemByNameCommand.Execute(Items, Categories);
+                        if (itemSearched == null)
+                        {
+                            Console.WriteLine("The item is not exist!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("{0} item founded! here details:", itemSearched.name);
+                            Console.WriteLine("description: {0}", itemSearched.description);
+                            Console.WriteLine("price: {0}", itemSearched.price);
+                            Console.WriteLine("status: {0}", itemSearched.status.ToString());
+                            Console.WriteLine("quantity: {0}", itemSearched.quantity);
+                            Console.WriteLine("sold: {0}", itemSearched.sold);
+                            Console.WriteLine("minimum quantity: {0}", itemSearched.minQuantity);
+                            Console.WriteLine("quantity in stock: {0}", itemSearched.stock);
+                            if (itemSearched.category != null) Console.WriteLine("category: {0}", itemSearched.category.name);
+                            else Console.WriteLine("category: NOT CATEGORIZED");
+                        }
+                        break;
+                    case "filterstatus":
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "status");
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filtercategory":
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "category");
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filterprice":
+                        userInput = GetUserInput("What is the operator criteria? ");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "price", userInput);
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filterstock":
+                        userInput = GetUserInput("What is the operator criteria? ");
+                        Globals.filterItemsByCriteriaCommand.Execute(ref FilteredItems, "stock", userInput);
+                        PrintFilteredItems(FilteredItems, Categories);
                         break;
                     case "logout":
                         return;

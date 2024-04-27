@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem.Commands
 {
@@ -115,10 +116,6 @@ namespace InventoryManagementSystem.Commands
             }
             item.name = userInput;
             item.description = GetUserInput("description: ");
-            if (Enum.TryParse(GetUserInput("status (InStock,OutOfStock,LowStock): "), out ItemStatus status))
-                item.status = status;
-
-            else item.status = ItemStatus.InStock;
 
             string[] label = { "price", "quantity", "sold", "minQuantity" };
 
@@ -133,6 +130,14 @@ namespace InventoryManagementSystem.Commands
                 PropertyInfo propertyInfo = item.GetType().GetProperty(label[i]);
                 propertyInfo.SetValue(item, temp);
             }
+
+            item.stock = item.quantity - item.sold;
+
+            if (item.stock == 0) item.status = ItemStatus.OutOfStock;
+
+            else if (item.stock < item.minQuantity) item.status = ItemStatus.LowStock;
+
+            else item.status = ItemStatus.InStock;
 
             List<ItemCategory> categories = new List<ItemCategory>();
             _categoriesService.GetCategories(ref categories);
@@ -208,6 +213,11 @@ namespace InventoryManagementSystem.Commands
                 Item updatedItem = new Item();
 
                 updatedItem.id = itemToUpdate.id;
+                updatedItem.quantity = itemToUpdate.quantity;
+                updatedItem.status = itemToUpdate.status;
+                updatedItem.sold = itemToUpdate.sold;
+                updatedItem.stock = itemToUpdate.stock;
+
                 string userInput =
                     GetUserInput("Do you want to update the name of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.name = GetUserInput("Enter the new name:");
@@ -222,33 +232,6 @@ namespace InventoryManagementSystem.Commands
                     GetUserInput("Do you want to update the price of the item? (Y/N)").ToUpper();
                 if (userInput == "Y") updatedItem.price = int.Parse(GetUserInput("Enter the new price:"));
                 else updatedItem.price = itemToUpdate.price;
-
-                userInput =
-                    GetUserInput("Do you want to update the status of the item? (Y/N)").ToUpper();
-                if (userInput == "Y")
-                {
-                    userInput = GetUserInput("Enter the new status:");
-                    switch (userInput)
-                    {
-                        case "InStock":
-                            updatedItem.status = ItemStatus.InStock;
-                            break;
-                        case "LowStock":
-                            updatedItem.status = ItemStatus.LowStock;
-                            break;
-                        case "OutOfStock":
-                            updatedItem.status = ItemStatus.OutOfStock;
-                            break;
-                        case "Unknown":
-                            updatedItem.status = ItemStatus.Unknown;
-                            break;
-                    }
-                }
-                else updatedItem.status = itemToUpdate.status;
-
-                updatedItem.quantity = itemToUpdate.quantity;
-
-                updatedItem.sold = itemToUpdate.sold;
 
                 userInput =
                     GetUserInput("Do you want to update the minimum quantity of the item? (Y/N)").ToUpper();
@@ -281,7 +264,6 @@ namespace InventoryManagementSystem.Commands
                 if (itemToUpdate.name != updatedItem.name ||
                 itemToUpdate.description != updatedItem.description ||
                 itemToUpdate.price != updatedItem.price ||
-                itemToUpdate.status != updatedItem.status ||
                 itemToUpdate.minQuantity != updatedItem.minQuantity ||
                 itemToUpdate.category != updatedItem.category)
                 {
@@ -487,6 +469,98 @@ namespace InventoryManagementSystem.Commands
             }
         }
 
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
+    public class UpdateSoldItemCommand
+    {
+        private readonly IItemService _itemService;
+        public UpdateSoldItemCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> items)
+        {
+            try
+            {
+                string itemName = GetUserInput("Enter the name of the item you want to update:");
+
+                Item itemToUpdate = items.FirstOrDefault(item => item.name == itemName);
+                if (itemToUpdate != null)
+                {
+                    int itemSolded = Int32.Parse(GetUserInput("Enter the number of sold items:"));
+                    if (_itemService.UpdateSoldItem(ref items, itemToUpdate.id, itemSolded))
+                    {
+                        Console.WriteLine("Updated successfully!");
+                        return;
+                    }
+                }
+                else Console.WriteLine($"Item with name '{itemName}' not found.");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
+    public class SearchItemByNameCommand
+    {
+        private readonly IItemService _itemService;
+        public SearchItemByNameCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public Item Execute(List<Item> items, List<ItemCategory> categories)
+        {
+            string userInput = GetUserInput("What is name of item for searching? ");
+            Item itemSearched = items.Find(item => item.name == userInput);
+            Item itemRetrieved = null;
+            if (itemSearched != null)
+            {
+                itemRetrieved = _itemService.GetItemByName(userInput, categories);
+            }
+            return itemRetrieved;
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
+
+    public class FilterItemsByCriteriaCommand
+    {
+        private readonly IItemService _itemService;
+        public FilterItemsByCriteriaCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> itemsFiltered, string criteria, [Optional] string operatorString)
+        {
+            itemsFiltered.Clear();
+            string userInput = GetUserInput("What is the criteria value?");
+
+            if (criteria == "status")
+            {
+                if (!Enum.TryParse<ItemStatus>(userInput, out ItemStatus result))
+                {
+                    userInput = "Unknown";
+                }
+            }
+            itemsFiltered = _itemService.GetFilterItems(criteria, userInput, operatorString);
+        }
         private string GetUserInput(string prompt)
         {
             Console.Write(prompt);

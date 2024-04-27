@@ -22,9 +22,10 @@ namespace InventoryManagementSystem.TestProject
             description = "this will test if the system add item correctly.",
             price = 20,
             status = ItemStatus.InStock,
-            sold = 1,
-            minQuantity = 0,
-            quantity = 0
+            sold = 0,
+            minQuantity = 1,
+            quantity = 2,
+            stock = 2
         };
 
         List<ItemCategory> categories = new List<ItemCategory>();
@@ -83,6 +84,7 @@ namespace InventoryManagementSystem.TestProject
                 quantity = item.quantity,
                 sold = item.sold,
                 minQuantity = item.minQuantity,
+                stock = item.stock,
                 category = categories[0]
             };
 
@@ -98,14 +100,14 @@ namespace InventoryManagementSystem.TestProject
             Assert.That(_itemService.UpdateItem(ref item, item), Is.EqualTo(false));
         }
 
-        [Test, Order(8)]
+        [Test, Order(20)]
         public void TestDeleteItem_valid()
         {
             item = items.FirstOrDefault(item => item.name == "Test update item");
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(true));
         }
 
-        [Test, Order(9)]
+        [Test, Order(21)]
         public void TestDeleteItem_invalid()
         {
             Assert.That(_itemService.DeleteItem(ref items, item.id), Is.EqualTo(false));
@@ -120,6 +122,90 @@ namespace InventoryManagementSystem.TestProject
         public void TestUpdateQuantity_invalid()
         {
             Assert.That(_itemService.UpdateQuantity(ref items, item.id, item.minQuantity - 1), Is.EqualTo(false));
+        }
+
+        [Test, Order(8)]
+        public void TestUpdateSold_valid()
+        {
+            Assert.That(_itemService.UpdateSoldItem(ref items, item.id, 1), Is.EqualTo(true));
+        }
+
+        [Test, Order(9)]
+        public void TestUpdateSold_invalid()
+        {
+            Assert.That(_itemService.UpdateSoldItem(ref items, item.id, 3), Is.EqualTo(false));
+        }
+
+        [Test, Order(10)]
+        public void TestSearchItem_valid()
+        {
+            Item itemRetrieved = _itemService.GetItemByName(item.name, categories);
+            Assert.That(item, Has.Property("id").EqualTo(itemRetrieved.id)
+                           & Has.Property("name").EqualTo(itemRetrieved.name)
+                           & Has.Property("description").EqualTo(itemRetrieved.description)
+                           & Has.Property("price").EqualTo(itemRetrieved.price)
+                           & Has.Property("status").EqualTo(itemRetrieved.status)
+                           & Has.Property("quantity").EqualTo(itemRetrieved.quantity)
+                           & Has.Property("sold").EqualTo(itemRetrieved.sold)
+                           & Has.Property("minQuantity").EqualTo(itemRetrieved.minQuantity)
+                           & Has.Property("category").EqualTo(itemRetrieved.category)
+                           & Has.Property("stock").EqualTo(itemRetrieved.stock)
+                           );
+
+        }
+        [Test, Order(11)]
+        public void TestSearchItem_invalid()
+        {
+            Assert.That(_itemService.GetItemByName("hallo tester", categories), Is.EqualTo(null));
+        }
+
+        [Test, Order(12)]
+        public void TestFilterStatusItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("status", ItemStatus.LowStock.ToString());
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(13)]
+        public void TestFilterStatusItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("status", ItemStatus.OutOfStock.ToString());
+            Assert.That(filtereditems.Count, Is.EqualTo(0));
+        }
+        [Test, Order(14)]
+        public void TestFilterCategoryItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("category", "Book");
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(15)]
+        public void TestFilterCategoryItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("category", "Tsss");
+            Assert.That(filtereditems.Count, Is.EqualTo(0));
+        }
+        [Test, Order(16)]
+        public void TestFilterPriceItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("price", "1000", "<");
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(17)]
+        public void TestFilterPriceItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("price", "5", "!==");
+            Assert.That(filtereditems, Is.Null);
+        }
+        [Test, Order(18)]
+        public void TestFilterStockItem_valid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("stock", "4", ">=");
+            Assert.That(filtereditems.Count, Is.GreaterThan(0));
+        }
+        [Test, Order(19)]
+        public void TestFilterStockItem_invalid()
+        {
+            List<Item> filtereditems = _itemService.GetFilterItems("stock", "0", "!==");
+            Assert.That(filtereditems, Is.Null);
         }
     }
 }
