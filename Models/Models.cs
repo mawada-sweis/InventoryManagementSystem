@@ -2,15 +2,27 @@
 
 namespace InventoryManagementSystem.Models
 {
+    /// <summary>
+    /// Represents an item category.
+    /// </summary>
     public class ItemCategory
     {
         public Guid id { get; set; }
         public string name { get; set; }
+
+        /// <summary>
+        /// Returns the name of the category
+        /// </summary>
+        /// <returns>The name of the category</returns>
         public override string ToString()
         {
             return name;
         }
     }
+
+    /// <summary>
+    /// Represents an item.
+    /// </summary>
     public class Item
     {
         public Guid id { get; set; }
@@ -26,6 +38,9 @@ namespace InventoryManagementSystem.Models
 
     }
 
+    /// <summary>
+    /// Represents a user.
+    /// </summary>
     public class User
     {
         public Guid id { get; set; }
@@ -37,13 +52,18 @@ namespace InventoryManagementSystem.Models
         public UserType userType { get; set; }
     }
 
-
+    /// <summary>
+    /// Represents the type of a user.
+    /// </summary>
     public enum UserType
     {
         User,
         Admin
     }
 
+    /// <summary>
+    /// Represents the status of an item.
+    /// </summary>
     public enum ItemStatus
     {
         InStock,
