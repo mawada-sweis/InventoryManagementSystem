@@ -5,15 +5,28 @@ using System.Collections.Generic;
 
 namespace InventoryManagementSystem.Services.Categories
 {
+    /// <summary>
+    /// Service for managing categories of items.
+    /// </summary>
     public class CategoriesService : ICategoriesService
     {
         private readonly string _connectionsString;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CategoriesService"/> class.
+        /// </summary>
+        /// <param name="connectionsString">The connection string to the database.</param>
         public CategoriesService(string connectionsString)
         {
             this._connectionsString = connectionsString;
         }
 
+        /// <summary>
+        /// Adds a new category to the database.
+        /// </summary>
+        /// <param name="category">The category to add.</param>
+        /// <param name="categories">The list of categories to update after adding.</param>
+        /// <returns>True if the category is successfully added, otherwise false.</returns>
         bool ICategoriesService.AddCategory(ItemCategory category, ref List<ItemCategory> categories)
         {
             try
@@ -51,6 +64,12 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
+        /// <summary>
+        /// Deletes a category from the database.
+        /// </summary>
+        /// <param name="categoryToDelete">The category to delete.</param>
+        /// <param name="categories">The list of categories to update after deletion.</param>
+        /// <returns>True if the category is successfully deleted, otherwise false.</returns>
         bool ICategoriesService.DeleteCategory(ref ItemCategory categoryToDelete, ref List<ItemCategory> categories)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(_connectionsString))
@@ -71,6 +90,11 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
+        /// <summary>
+        /// Retrieves all categories from the database.
+        /// </summary>
+        /// <param name="categories">The list to populate with categories.</param>
+        /// <returns>True if categories are successfully retrieved, otherwise false.</returns>
         bool ICategoriesService.GetCategories(ref List<ItemCategory> categories)
         {
             try
@@ -110,6 +134,13 @@ namespace InventoryManagementSystem.Services.Categories
             }
         }
 
+        /// <summary>
+        /// Updates the name of a category in the database.
+        /// </summary>
+        /// <param name="categoryName">The new name for the category.</param>
+        /// <param name="category">The category to update.</param>
+        /// <param name="categories">The list of categories to update after renaming.</param>
+        /// <returns>True if the category is successfully updated, otherwise false.</returns>
         bool ICategoriesService.UpdateCategory(string categoryName, ref ItemCategory category, ref List<ItemCategory> categories)
         {
             if (categoryName == category.name)
@@ -133,8 +164,8 @@ namespace InventoryManagementSystem.Services.Categories
                     {
                         string oldName = category.name;
                         ItemCategory categoryFound = categories.Find(cat => cat.name.Equals(oldName, StringComparison.OrdinalIgnoreCase));
-                        if (categoryFound != null ) categoryFound.name = categoryName;
-                        
+                        if (categoryFound != null) categoryFound.name = categoryName;
+
                         category.name = categoryName;
                         return true;
                     }
