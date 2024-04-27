@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 
 namespace InventoryManagementSystem.Services.Items
 {
@@ -310,6 +311,53 @@ namespace InventoryManagementSystem.Services.Items
             {
                 Console.WriteLine(ex.ToString());
                 return false;
+            }
+        }
+
+        public Item GetItemByName(string itemName)
+        {
+            Item item = new Item();
+            try
+            { 
+                using(NpgsqlConnection connection =  new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM items WHERE item_name = @ItemName";
+                    using(NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@ItemName", itemName);
+                        using (NpgsqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                string statusString = reader.GetString(reader.GetOrdinal("item_status"));
+                                ItemStatus status;
+                                if (!Enum.TryParse(statusString, out status))
+                                {
+                                    status = ItemStatus.Unknown;
+                                }
+                                item = new Item
+                                {
+                                    id = reader.GetGuid(reader.GetOrdinal("item_id")),
+                                    name = reader.GetString(reader.GetOrdinal("item_name")),
+                                    description = reader.GetString(reader.GetOrdinal("item_description")),
+                                    price = reader.GetInt32(reader.GetOrdinal("item_price")),
+                                    status = status,
+                                    quantity = reader.GetInt32(reader.GetOrdinal("item_quantity")),
+                                    sold = reader.GetInt32(reader.GetOrdinal("item_sold")),
+                                    minQuantity = reader.GetInt32(reader.GetOrdinal("item_min_quantity")),
+                                    stock = reader.GetInt32(reader.GetOrdinal("item_stock"))
+                                };
+                            }
+                            return item;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.ToString());
+                return item;
             }
         }
     }

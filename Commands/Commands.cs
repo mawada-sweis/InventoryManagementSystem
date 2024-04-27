@@ -513,4 +513,29 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+
+    public class SearchItemByNameCommand
+    {
+        private readonly IItemService _itemService;
+        public SearchItemByNameCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public Item Execute(List<Item> items)
+        {
+            string userInput = GetUserInput("What is name of item for searching? ");
+            Item itemSearched = items.Find(item => item.name == userInput);
+            Item itemRetrieved = null;
+            if(itemSearched != null)
+            {
+                itemRetrieved = _itemService.GetItemByName(userInput);
+            }
+            return itemRetrieved;
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
 }

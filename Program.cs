@@ -24,6 +24,7 @@ namespace InventoryManagementSystem
             public static readonly Commands.ResetPassCommand resetPassCommand = new ResetPassCommand(authentication);
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
+            public static Commands.SearchItemByNameCommand searchItemByNameCommand = new SearchItemByNameCommand(itemService);
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
@@ -132,7 +133,9 @@ namespace InventoryManagementSystem
                             "Display All Categories => DisplayCategories\n" +
                             "Add New Item Category => AddCategory\n" +
                             "Update Category by Name => UpdateCategory\n" +
-                            "Delete Category by Name => DeleteCategory");
+                            "Delete Category by Name => DeleteCategory\n" +
+                            "=========================================================\n" +
+                            "Search item by name => SearchItem\n");
                         break;
                     case "additem":
                         addItemCommand.Execute(ref Items);
@@ -194,6 +197,26 @@ namespace InventoryManagementSystem
                         break;
                     case "deletecategory":
                         deleteCategoryCommand.Execute(ref Categories);
+                        break;
+                    case "searchitem":
+                        Item itemSearched = Globals.searchItemByNameCommand.Execute(Items);
+                        if(itemSearched == null)
+                        {
+                            Console.WriteLine("The item is not exist!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("{0} item founded! here details:", itemSearched.name);
+                            Console.WriteLine("description: {0}", itemSearched.description);
+                            Console.WriteLine("price: {0}", itemSearched.price);
+                            Console.WriteLine("status: {0}", itemSearched.status.ToString());
+                            Console.WriteLine("quantity: {0}", itemSearched.quantity);
+                            Console.WriteLine("sold: {0}", itemSearched.sold);
+                            Console.WriteLine("minimum quantity: {0}", itemSearched.minQuantity);
+                            Console.WriteLine("quantity in stock: {0}", itemSearched.stock);
+                            if (itemSearched.category != null) Console.WriteLine("category: {0}", itemSearched.category.name);
+                            else Console.WriteLine("category: NOT CATEGORIZED");
+                        }
                         break;
                     case "logout":
                         return;
