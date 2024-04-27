@@ -538,4 +538,32 @@ namespace InventoryManagementSystem.Commands
             return Console.ReadLine().Trim();
         }
     }
+
+    public class FilterItemsByStatusCommand
+    {
+        private readonly IItemService _itemService;
+        public FilterItemsByStatusCommand(IItemService itemService)
+        {
+            _itemService = itemService;
+        }
+        public void Execute(ref List<Item> itemsFiltered, string criteria)
+        {
+            itemsFiltered.Clear();
+            string userInput = GetUserInput("What is the criteria value?");
+
+            if (criteria == "status")
+            {
+                if (!Enum.TryParse<ItemStatus>(userInput, out ItemStatus result))
+                {
+                    userInput = "Unknown";
+                }
+            }
+            itemsFiltered = _itemService.GetFilterItems(criteria, userInput);
+        }
+        private string GetUserInput(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine().Trim();
+        }
+    }
 }

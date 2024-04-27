@@ -362,5 +362,79 @@ namespace InventoryManagementSystem.Services.Items
                 return item;
             }
         }
+
+        public List<Item> GetFilterItems(string criteria, string creteriaValue)
+        {
+            List<Item> items = new List<Item>();
+            string query;
+
+            if (criteria == "status")
+            {
+                query = "SELECT * FROM items WHERE item_status = @CreteriaValue";
+            }
+            else if (criteria == "category")
+            {
+                query = "SELECT items.* " +
+                    "FROM items " +
+                    "JOIN categories ON items.category_id = categories.category_id " +
+                    "WHERE categories.category_name = @CreteriaValue;";
+            }
+            else return null;
+
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@CreteriaValue", creteriaValue);
+                        using (NpgsqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                string statusString = reader.GetString(reader.GetOrdinal("item_status"));
+                                ItemStatus status;
+                                if (!Enum.TryParse(statusString, out status))
+                                {
+                                    status = ItemStatus.Unknown;
+                                }
+                                ItemCategory category = new ItemCategory
+                                {
+                                    id = reader.GetGuid(reader.GetOrdinal("category_id"))
+                                };
+                                Item tempItem = new Item
+                                {
+                                    id = reader.GetGuid(reader.GetOrdinal("item_id")),
+                                    name = reader.GetString(reader.GetOrdinal("item_name")),
+                                    description = reader.GetString(reader.GetOrdinal("item_description")),
+                                    price = reader.GetInt32(reader.GetOrdinal("item_price")),
+                                    status = status,
+                                    quantity = reader.GetInt32(reader.GetOrdinal("item_quantity")),
+                                    sold = reader.GetInt32(reader.GetOrdinal("item_sold")),
+                                    minQuantity = reader.GetInt32(reader.GetOrdinal("item_min_quantity")),
+                                    stock = reader.GetInt32(reader.GetOrdinal("item_stock")),
+                                    category = category,
+
+                                };
+                                items.Add(tempItem);
+                            }
+                        }
+                    }
+                }
+
+                return items;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
+        public List<Item> GetFilterItems(string creteria, int creteriaValue)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

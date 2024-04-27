@@ -6,6 +6,7 @@ using InventoryManagementSystem.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics.Metrics;
 using System.Runtime.InteropServices;
 
 namespace InventoryManagementSystem
@@ -25,6 +26,7 @@ namespace InventoryManagementSystem
             public static Commands.GetItemsCommand getItemsCommand = new GetItemsCommand(itemService);
             public static Commands.GetCategoriesCommand getCategoriesCommand = new GetCategoriesCommand(Globals.categoriesService);
             public static Commands.SearchItemByNameCommand searchItemByNameCommand = new SearchItemByNameCommand(itemService);
+            public static Commands.FilterItemsByStatusCommand filterItemsByStatusCommand = new FilterItemsByStatusCommand(itemService);
 
             public static List<ItemCategory> categories { get; set; } = new List<ItemCategory>();
             public static List<Item> items { get; set; } = new List<Item>();
@@ -58,6 +60,36 @@ namespace InventoryManagementSystem
         {
             Console.Write("Write a command: \\api\\{0}", rout);
             return Console.ReadLine().Trim().ToLower();
+        }
+        static void PrintFilteredItems(List<Item> FilteredItems, List<ItemCategory> Categories)
+        {
+            foreach (Item item in FilteredItems)
+            {
+                item.category.name = Categories.Find(cat => cat.id == item.category.id).name;
+            }
+            if (FilteredItems.Count == 0)
+            {
+                Console.WriteLine("The critiria is not match any item!");
+                return;
+            }
+            Console.WriteLine("Items:");
+            int count = 1;
+            foreach (Item item in FilteredItems)
+            {
+                Console.WriteLine("Item {0}:", count);
+                Console.WriteLine("name: {0}", item.name);
+                Console.WriteLine("description: {0}", item.description);
+                Console.WriteLine("price: {0}", item.price);
+                Console.WriteLine("status: {0}", item.status.ToString());
+                Console.WriteLine("quantity: {0}", item.quantity);
+                Console.WriteLine("sold: {0}", item.sold);
+                Console.WriteLine("minimum quantity: {0}", item.minQuantity);
+                Console.WriteLine("quantity in stock: {0}", item.stock);
+                if (item.category != null) Console.WriteLine("category: {0}", item.category.name);
+                else Console.WriteLine("category: NOT CATEGORIZED");
+                Console.WriteLine("=================");
+                count++;
+            }
         }
         static void UserMenu(ref User user)
         {
@@ -107,6 +139,7 @@ namespace InventoryManagementSystem
 
             List<ItemCategory> Categories = Globals.categories;
             List<Item> Items = Globals.items;
+            List<Item> FilteredItems = new List<Item>();
 
             string homeRout = $"{user.userName}\\admin\\home\\";
             string userInput = GetUserInput(homeRout);
@@ -135,7 +168,9 @@ namespace InventoryManagementSystem
                             "Update Category by Name => UpdateCategory\n" +
                             "Delete Category by Name => DeleteCategory\n" +
                             "=========================================================\n" +
-                            "Search item by name => SearchItem\n");
+                            "Search item by name => SearchItem\n" +
+                            "Filter items by status => FilterStatus\n" +
+                            "Filter items by category => FilterCategory\n");
                         break;
                     case "additem":
                         addItemCommand.Execute(ref Items);
@@ -217,6 +252,14 @@ namespace InventoryManagementSystem
                             if (itemSearched.category != null) Console.WriteLine("category: {0}", itemSearched.category.name);
                             else Console.WriteLine("category: NOT CATEGORIZED");
                         }
+                        break;
+                    case "filterstatus":
+                        Globals.filterItemsByStatusCommand.Execute(ref FilteredItems, "status");
+                        PrintFilteredItems(FilteredItems, Categories);
+                        break;
+                    case "filtercategory":
+                        Globals.filterItemsByStatusCommand.Execute(ref FilteredItems, "category");
+                        PrintFilteredItems(FilteredItems, Categories);
                         break;
                     case "logout":
                         return;
